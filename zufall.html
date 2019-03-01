@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="de">
+    <head>
+        <meta charset="utf-8">
+        <title>Zufallsgenarator</title>
+        <meta name="description" content="Noten und Akkordwürfel">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <meta name="author" content="marcscheidegger.ch">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+        
+
+    </head>
+    <body>
+          <!-- Header der Seite -->
+        <nav class="navbar navbar-dark bg-dark">
+            <span class="navbar-brand mb-0 h1">Würfeln!</span>
+        </nav> 
+
+        <!-- Karten mit den einzelnen Zufallsgeneratoren-->
+        <!-- 1. Stammtöne-->
+        <div class="card border-primary m-3 mw-100 card-schmal">
+            <h5 class="card-header">Stammton-Würfel</h5>
+            <div class="card-body" id="stammtonW">
+                <button id="stammButtonW" type="button" class="btn btn-primary">Würfel</button>
+                <p class="card-text pt-3" id="stTone"></p>
+                
+            </div>
+            
+        </div>
+        <!-- 2. Chromatik-->
+        <div class="card border-warning m-3 mw-100">
+                <h5 class="card-header">Chromatik-Würfel</h5>
+                <div class="card-body" id="chromatikW">
+                    <button id="chromButtonW" type="button" class="btn btn-warning">Würfel</button>
+                    <p class="card-text pt-3" id="chTone"></p>
+                </div>
+        </div>
+        <!-- 3. Die Akkorde der 1. Lage CAGEFD B7 Bm7 -->
+        <div class="card border-success m-3 mw-100">
+            <h5 class="card-header">Würfel Akkorde der 1. Lage</h5>
+            <div class="card-body" id="akkordeLage1W">
+                <button id="akkLage1ButtonW" type="button" class="btn btn-success">Würfel</button>
+                <h3 class="card-title pt-3" id="akkLeins"></h3>
+                <button id="zeigImg" type="button" class="btn btn-outline-dark btn-sm">Griff</button>
+                <div class="pt-3">
+                    <img src="#" id="imgAkk" class="img-fluid" alt="Akkord Bild" style="display: none ">
+                </div>
+            </div>
+        </div>
+        <!--4. CAGED System Akkorde Dur Moll 7 m7 CAGEFD AmEmDm-->  
+        <div class="card border-danger m-3 mw-100">
+            <h5 class="card-header">CAGED Akkorde Würfel</h5>
+            <div class="card-body" id="cagedAkkW">
+                <button id="cagedButtonW" type="button" class="btn btn-danger">Würfel</button> 
+                <h3 class="card-text pt-3" id="cagedText"></h3>
+                <button id="zeigImg2" type="button" class="btn btn-outline-dark btn-sm">Griff</button>
+                <div class="pt-3"></div>
+                    <img src="#" id="imgCaged" class="img-fluid" alt="CAGED Akkord-Form Griffbild" style="display: none">
+                </div>
+             </div>
+        </div>
+     
+
+
+
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="zufall.js"></script>
+    
+    </body>
+</html>
