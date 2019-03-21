@@ -20,17 +20,19 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
                 <div class="navbar-nav">
-                    <a class="nav-item nav-link disabled" href="#">Stammton-Würfel</a>
-                    <a class="nav-item nav-link disabled" href="#">Chromatik-Würfel</a>
-                    <a class="nav-item nav-link disabled" href="#">Akkorde 1. Lage</a>
-                    <a class="nav-item nav-link disabled" href="#">CAGED Akkorde</a>
+                    <button class="btn btn-outline-primary m-1 mt-3" id="nav1" type="button">Stammton-Würfel</button>
+                    <button class="btn btn-outline-warning m-1" id="nav2" type="button">Chromatik-Würfel</button>
+                    <button class="btn btn-outline-success m-1" id="nav3" type="button">Akkorde 1. Lage</button>
+                    <button class="btn btn-outline-danger m-1" id="nav4" type="button">CAGED Akkorde</button>
                 </div>
             </div>
         </nav>
-
+        <div class="alert alert-primary m-3" role="alert">
+            Wähle deinen Würfel im Menu!
+        </div>
         <!-- Karten mit den einzelnen Zufallsgeneratoren-->
         <!-- 1. Stammtöne-->
-        <div class="card border-primary m-3 mw-100 card-schmal">
+        <div class="card border-primary m-3 mw-100 card-schmal" id="card1" style="display: none">
             <h5 class="card-header">Stammton-Würfel</h5>
             <div class="card-body" id="stammtonW">
                 <button id="stammButtonW" type="button" class="btn btn-primary">Würfel</button>
@@ -40,7 +42,7 @@
             
         </div>
         <!-- 2. Chromatik-->
-        <div class="card border-warning m-3 mw-100">
+        <div class="card border-warning m-3 mw-100" id="card2" style="display: none">
                 <h5 class="card-header">Chromatik-Würfel</h5>
                 <div class="card-body" id="chromatikW">
                     <button id="chromButtonW" type="button" class="btn btn-warning">Würfel</button>
@@ -48,7 +50,7 @@
                 </div>
         </div>
         <!-- 3. Die Akkorde der 1. Lage CAGEFD B7 Bm7 -->
-        <div class="card border-success m-3 mw-100">
+        <div class="card border-success m-3 mw-100" style="display: none" id="card3">
             <h5 class="card-header">Würfel Akkorde der 1. Lage</h5>
             <div class="card-body" id="akkordeLage1W">
                 <button id="akkLage1ButtonW" type="button" class="btn btn-success">Würfel</button>
@@ -60,7 +62,7 @@
             </div>
         </div>
         <!--4. CAGED System Akkorde Dur Moll 7 m7 CAGEFD AmEmDm-->  
-        <div class="card border-danger m-3 mw-100">
+        <div class="card border-danger m-3 mw-100" style="display: none" id="card4">
             <h5 class="card-header">CAGED Akkorde Würfel</h5>
             <div class="card-body" id="cagedAkkW">
                 <button id="cagedButtonW" type="button" class="btn btn-danger">Würfel</button> 

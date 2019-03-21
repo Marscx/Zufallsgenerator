@@ -451,3 +451,20 @@ $("#cagedButtonW").on("click", function() {
     $akkFormD.length = 0;
     $akkFormM.length = 0;
 });
+
+//Stammton Würfel einblenden via Menu
+$("#nav1").on("click", function() {
+    $("#card1").fadeToggle(1000);
+});
+//Chromatik Würfel einblenden via Menu
+$("#nav2").on("click", function () {
+    $("#card2").fadeToggle(1000);
+});
+//Akkord Würfel 1. Lage
+$("#nav3").on("click", function () {
+    $("#card3").fadeToggle(1000);
+});
+// CAGED Akkord Würfel 
+$("#nav4").on("click", function () {
+    $("#card4").fadeToggle(1000);
+});
