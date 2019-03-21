@@ -354,7 +354,7 @@ var $akkFormDur = [
 var $akkFormMoll = [
     {
         name: "Am-Form",
-        url: "https://marcscheidegger.ch/MarcBuch/3ECC76DB-7129-4403-8420-DB2BB342E763.png"
+        url: "https://marcscheidegger.ch/MarcBuch/Content/09C63466-026C-4471-BBA9-4FE60CCBEE85.png"
     },
     {
         name: "Em-Form",
