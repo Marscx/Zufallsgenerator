@@ -365,6 +365,37 @@ var $akkFormMoll = [
         url: "https://marcscheidegger.ch/MarcBuch/Content/E2C97907-5AD2-45A3-9CBC-3A52C5673D7D.png"
     }
 ];
+// Aufgaben-Karten
+var $aufgaben = [
+    {   name: "Darvida zwischen Daumen und Hals" },
+    {   name: "Gummibärli zwischen den Fingern" },
+    {   name: "Fussposition verändern (Schneidersitz, kreuzen, auf Zehenspitzen, Damensitz)" },
+    {   name: "Kaugummi kauen" },
+    {   name: "Stehen statt Sitzen" },
+    {   name: "Schaukeln" },
+    {   name: "Sonnenbrille" },
+    {   name: "Verkleidung" },
+    {   name: "Notenständer Position ändern" },
+    {   name: "Tür ab-auf" },
+    {   name: "Falsche Haltung" },
+    {   name: "Sandsäckli auf Körper platzieren" },
+    {   name: "Ballon unter dem Arm, Pingpong Ball unter Handballen" },
+    {   name: "Schnur (Marionetten, Puppenspieler)" },
+    {   name: "Raum verdunkeln" },
+    {   name: "Rauschen im Hintergrund (White Noise)" },
+    {   name: "Gitarre spielen (Cello)" },
+    {   name: "Halbton tiefer stimmen" },
+    {   name: "Körper bewegen" },
+    {   name: "Schulter hoch ziehen" },
+    {   name: "Mit Schwamm unter Saiten" },
+    {   name: "Etwas in den Mund" },
+    {   name: "Hand hinter dem Rücken" },
+    {   name: "Blind spielen, und Kopf hoch" },
+    {   name: "TV schauen" },
+    {   name: "Grimassen machen" },
+    {   name: "Essen" },
+    {   name: "Eine Geschichte erzählen" }
+];
 // beim drücke des Knopfes: Zufällige Auswahl eines von 10 Stammtones
 
 var $tone = [];
@@ -453,6 +484,19 @@ $("#zeigImg2").on("click", function(){
     $("#imgCaged").fadeIn(1000);
 });
 
+// beim drücken des Knopfes zufällige Anzeige einer Aufgaben-Karte (nie zweimal dieselbe hintereinander)
+var $letzteAufgabe = -1;
+$("#aufgabeButtonW").on("click", function() {
+    var $neu;
+    do {
+        $neu = Math.floor(Math.random()*$aufgaben.length);
+    } while ($neu === $letzteAufgabe);
+    $letzteAufgabe = $neu;
+    $("#aufgabeKarte").hide();
+    $("#aufgabeText").text($aufgaben[$neu].name);
+    $("#aufgabeKarte").fadeIn(600);
+});
+
 //Stammton Würfel einblenden via Menu
 $("#nav1").on("click", function() {
     $("#card1").fadeToggle(1000);
@@ -468,4 +512,8 @@ $("#nav3").on("click", function () {
 // CAGED Akkord Würfel 
 $("#nav4").on("click", function () {
     $("#card4").fadeToggle(1000);
+});
+// Aufgaben Würfel
+$("#nav5").on("click", function () {
+    $("#card5").fadeToggle(1000);
 });
