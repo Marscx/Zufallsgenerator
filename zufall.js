@@ -371,7 +371,7 @@ var $tone = [];
 //var $text = $("<h4>");
 $("#stammButtonW").on("click", function() {
     $("#stTone").empty();
-    for (i = 0; i < 10; i++) {
+    for (var i = 0; i < 10; i++) {
        $tone.push(Math.floor(Math.random()*$stTone.length));
          //$text.appendTo("#stammtonW");
          $("#stTone").append($stTone[$tone[i]].name + " ");
@@ -385,7 +385,7 @@ var $toneCh = [];
 
 $("#chromButtonW").on("click", function() {
     $("#chTone").empty();
-    for (j = 0; j < 10; j++) {
+    for (var j = 0; j < 10; j++) {
         $toneCh.push(Math.floor(Math.random()*$chTone.length));
         //$text.appendTo("#chromatikW");
         $("#chTone").append($chTone[$toneCh[j]].name + " ");
@@ -399,17 +399,17 @@ var $akk = [];
 $("#akkLage1ButtonW").on("click", function() {
     $("#akkLeins").empty();
     $("#imgAkk").hide();
-    for (n = 0; n < 1; n++) {
+    for (var n = 0; n < 1; n++) {
         $akk.push(Math.floor(Math.random()*$akkL1.length));
         $("#akkLeins").append($akkL1[$akk[n]].name + " ");
         $("#imgAkk").attr("src", $akkL1[$akk[n]].urlGriff);
         
     }
-    $("#zeigImg").on("click", function(){
-        $("#imgAkk").fadeIn(1000);
-    });
-       
         $akk.length = 0;
+});
+// Griffbild Akkorde 1. Lage einblenden
+$("#zeigImg").on("click", function(){
+    $("#imgAkk").fadeIn(1000);
 });
 // beim drücken des Kopfes zufällige Anzeige eines Chromatischen Akkords Dur Moll 7 maj7 m7b5
 var $tonleiterTon = [];
@@ -437,9 +437,6 @@ $("#cagedButtonW").on("click", function() {
             $("#imgCaged").attr("src", $akkFormDur[$akkFormD[m]].url);
         }
     }
-    $("#zeigImg2").on("click", function(){
-        $("#imgCaged").fadeIn(1000);
-    });
     console.log($tonleiterTon);
     console.log($vorZ);
     console.log($akkordArt);
@@ -450,6 +447,10 @@ $("#cagedButtonW").on("click", function() {
     $akkordArt.length = 0;
     $akkFormD.length = 0;
     $akkFormM.length = 0;
+});
+// Griffbild CAGED Akkord einblenden
+$("#zeigImg2").on("click", function(){
+    $("#imgCaged").fadeIn(1000);
 });
 
 //Stammton Würfel einblenden via Menu
