@@ -1,0 +1,111 @@
+/* Würfel – Aussehen des Tools
+   Kopfleiste, Fusszeile und Markenfarben kommen aus marke.css.
+   Farben hell/dunkel wie der Übe-Timer, passend zu marcscheidegger.ch. */
+
+/* Hell: helles Blaugrau, Text in Nachtblau */
+:root {
+    --bg: #eef1f7;
+    --panel: #ffffff;
+    --ink: #0b1220;
+    --muted: #5a6785;
+    --line: #dbe1ee;
+    --field: #f1f4f9;
+}
+/* Dunkel: Nachtblau wie die Hauptseite */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg: #0b1220;
+        --panel: #16213a;
+        --ink: #f5f7fb;
+        --muted: #a9b8d6;
+        --line: #2a3a5e;
+        --field: #111a2e;
+    }
+}
+
+/* Farbe jedes Würfels (gleiche Palette wie die Timerfarben im Übe-Timer) */
+[data-farbe="blau"]   { --c: #4fb6ea; --c-ink: #0b1220; }
+[data-farbe="gelb"]   { --c: #f7c925; --c-ink: #0b1220; }
+[data-farbe="gruen"]  { --c: #5cc96b; --c-ink: #0b1220; }
+[data-farbe="rot"]    { --c: #d8262c; --c-ink: #ffffff; }
+[data-farbe="orange"] { --c: #f5922f; --c-ink: #0b1220; }
+
+* { box-sizing: border-box; }
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--ms-font);
+    line-height: 1.45;
+}
+.ms-foot { --ms-foot-color: var(--muted); opacity: 1; }
+.ms-foot p { margin: 0; }
+
+.screen { max-width: 1120px; margin: 0 auto; padding: 24px 16px 40px; }
+
+/* ---------- Titel ---------- */
+.tool-head { margin: 8px 0 18px; }
+.kicker {
+    display: block; font-size: .78rem; font-weight: 600; letter-spacing: .28em;
+    text-transform: uppercase; color: var(--muted); margin-bottom: 6px;
+}
+.tool-head h1 { margin: 0 0 6px; font-size: clamp(2rem, 6vw, 2.8rem); line-height: 1.1; letter-spacing: -.01em; }
+.hint { color: var(--muted); margin: 0 0 12px; }
+
+/* ---------- Auswahl der Würfel ---------- */
+.picker { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 24px; }
+.pick {
+    font: inherit; font-weight: 600; cursor: pointer;
+    padding: 9px 16px 9px 12px; border-radius: 999px;
+    background: var(--panel); color: var(--ink); border: 2px solid var(--line);
+    display: inline-flex; align-items: center; gap: 8px;
+    transition: border-color .15s, background .15s, transform .08s;
+}
+.pick::before { content: ""; width: 12px; height: 12px; border-radius: 50%; background: var(--c); }
+.pick:hover { border-color: var(--c); }
+.pick:active { transform: scale(.97); }
+.pick[aria-pressed="true"] { background: var(--c); border-color: var(--c); color: var(--c-ink); }
+.pick[aria-pressed="true"]::before { background: var(--c-ink); }
+
+/* ---------- Würfel-Karten ---------- */
+.wuerfel { display: grid; gap: 20px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); align-items: start; }
+.card {
+    background: var(--panel); border-radius: 18px; overflow: hidden;
+    border: 1px solid var(--line); border-top: 6px solid var(--c);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, .08);
+}
+.card-header { margin: 0; padding: 16px 20px 0; font-size: 1.2rem; }
+.card-body { padding: 14px 20px 22px; }
+
+.btn {
+    font: inherit; font-weight: 600; cursor: pointer;
+    padding: 10px 22px; border-radius: 999px;
+    background: var(--c); color: var(--c-ink); border: 2px solid var(--c);
+    transition: transform .08s, filter .15s;
+}
+.btn:hover { filter: brightness(.93); }
+.btn:active { transform: scale(.97); }
+.btn-ghost { background: transparent; color: var(--ink); border-color: var(--line); padding: 7px 16px; font-size: .9rem; }
+.btn-ghost:hover { border-color: var(--c); filter: none; }
+
+/* Gewürfelte Töne / Akkorde */
+.ergebnis {
+    min-height: 1.5em; margin: 16px 0 12px;
+    font-size: 1.5rem; font-weight: 700; letter-spacing: .04em; word-spacing: .3em;
+    font-variant-numeric: tabular-nums;
+}
+.ergebnis.gross { font-size: 2rem; letter-spacing: 0; word-spacing: normal; }
+.ergebnis:empty { min-height: 0; margin: 0 0 4px; }
+
+/* Griffbilder (weisser Hintergrund, auch im dunklen Modus gut lesbar) */
+.griff { display: block; max-width: 100%; height: auto; margin-top: 14px; border-radius: 10px; background: #fff; }
+
+/* Chaos-Karte */
+.chaos-karte {
+    margin-top: 16px; padding: 22px 18px; text-align: center;
+    border-radius: 14px; background: var(--field); border: 2px dashed var(--c);
+}
+.chaos-karte p { margin: 0; font-size: 1.5rem; font-weight: 700; line-height: 1.25; }
+
+:focus-visible { outline: 3px solid var(--ms-yellow); outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }

@@ -497,23 +497,20 @@ $("#aufgabeButtonW").on("click", function() {
     $("#aufgabeKarte").fadeIn(600);
 });
 
-//Stammton Würfel einblenden via Menu
-$("#nav1").on("click", function() {
-    $("#card1").fadeToggle(1000);
-});
-//Chromatik Würfel einblenden via Menu
-$("#nav2").on("click", function () {
-    $("#card2").fadeToggle(1000);
-});
+// Würfel ein- und ausblenden über die Auswahlknöpfe (nav1–nav5 → card1–card5).
+// aria-pressed markiert den Knopf als aktiv (farbig gefüllt, siehe zufall.css).
+function $wuerfelUmschalten(nr) {
+    var $knopf = $("#nav" + nr);
+    $knopf.attr("aria-pressed", $knopf.attr("aria-pressed") === "true" ? "false" : "true");
+    $("#card" + nr).fadeToggle(400);
+}
+//Stammton Würfel
+$("#nav1").on("click", function() { $wuerfelUmschalten(1); });
+//Chromatik Würfel
+$("#nav2").on("click", function() { $wuerfelUmschalten(2); });
 //Akkord Würfel 1. Lage
-$("#nav3").on("click", function () {
-    $("#card3").fadeToggle(1000);
-});
-// CAGED Akkord Würfel 
-$("#nav4").on("click", function () {
-    $("#card4").fadeToggle(1000);
-});
-// Aufgaben Würfel
-$("#nav5").on("click", function () {
-    $("#card5").fadeToggle(1000);
-});
+$("#nav3").on("click", function() { $wuerfelUmschalten(3); });
+// CAGED Akkord Würfel
+$("#nav4").on("click", function() { $wuerfelUmschalten(4); });
+// Aufgaben Würfel (Chaos)
+$("#nav5").on("click", function() { $wuerfelUmschalten(5); });

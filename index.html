@@ -2,115 +2,117 @@
 <html lang="de">
     <head>
         <meta charset="utf-8">
-        <title>Zufallsgenerator</title>
-        <meta name="description" content="Noten und Akkordwürfel">
-        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <title>Würfel – Marc Scheidegger</title>
+        <meta name="description" content="Noten- und Akkordwürfel für die Übezeit: Stammtöne, Chromatik, Akkorde, CAGED und Chaos-Würfel">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="author" content="marcscheidegger.ch">
-        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-        
-
+        <meta name="theme-color" content="#0b1220">
+        <link rel="icon" href="favicon.svg" type="image/svg+xml">
+        <link rel="stylesheet" href="marke.css?v=2">
+        <link rel="stylesheet" href="zufall.css?v=1">
     </head>
     <body>
-          <!-- Header der Seite -->
-        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-            <a class="navbar-brand" href="https://marcscheidegger.ch" role="button">Home marcscheidegger.ch</a>
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup"
-                aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-                <div class="navbar-nav">
-                    <button class="btn btn-outline-primary m-1 mt-3" id="nav1" type="button">Stammton-Würfel</button>
-                    <button class="btn btn-outline-warning m-1 mt-3" id="nav2" type="button">Chromatik-Würfel</button>
-                    <button class="btn btn-outline-success m-1 mt-3" id="nav3" type="button">Akkorde 1. Lage</button>
-                    <button class="btn btn-outline-danger m-1 mt-3" id="nav4" type="button">CAGED Akkorde</button>
-                    <button class="btn btn-outline-info m-1 mt-3" id="nav5" type="button">Chaos-Würfel</button>
-                </div>
+        <!-- Gemeinsame Kopfleiste aller Übe-Tools (Aussehen in marke.css) -->
+        <!-- ÜBERGANG bis zum Livegang der neuen Hauptseite (nach 14.11.2026):
+             Name (Marc Scheidegger), Lernen, Impressum und Datenschutz zeigen auf neu.marcscheidegger.ch.
+             Danach "neu." aus diesen Links entfernen. -->
+        <header class="ms-bar">
+            <div class="ms-bar-inner">
+                <a class="ms-brand" href="https://neu.marcscheidegger.ch/">Marc <span>Scheidegger</span></a>
+                <nav aria-label="Übe-Tools">
+                    <ul class="ms-nav">
+                        <li><a href="https://zufall.marcscheidegger.ch/" aria-current="page">Würfel</a></li>
+                        <li><a href="https://uebetimer.marcscheidegger.ch/">Übe-Timer</a></li>
+                        <li><a href="https://caged.marcscheidegger.ch/">Instrumentengrafiken</a></li>
+                        <li><a href="https://neu.marcscheidegger.ch/lernen.html">Lernen</a></li>
+                    </ul>
+                </nav>
             </div>
-        </nav>
-        <div class="alert alert-primary m-3" role="alert">
-            Wähle deinen Würfel im Menu! Viel Spass!!!
-        </div>
-        <!-- Karten mit den einzelnen Zufallsgeneratoren-->
-        <!-- 1. Stammtöne-->
-        <div class="card border-primary m-3 mw-100 card-schmal" id="card1" style="display: none">
-            <h5 class="card-header">Stammton-Würfel</h5>
-            <div class="card-body" id="stammtonW">
-                <button id="stammButtonW" type="button" class="btn btn-primary">Würfel</button>
-                <p class="card-text pt-3" id="stTone"></p>
-                
+        </header>
+
+        <main class="screen">
+            <!-- Titel und Auswahl der Würfel. Jeder Knopf blendet seinen Würfel ein bzw. aus (zufall.js). -->
+            <div class="tool-head">
+                <span class="kicker">Übe-Tool</span>
+                <h1>Würfel</h1>
+                <p class="hint">Wähle einen oder mehrere Würfel – würfeln statt immer das Gleiche üben.</p>
             </div>
-            
-        </div>
-        <!-- 2. Chromatik-->
-        <div class="card border-warning m-3 mw-100" id="card2" style="display: none">
-                <h5 class="card-header">Chromatik-Würfel</h5>
-                <div class="card-body" id="chromatikW">
-                    <button id="chromButtonW" type="button" class="btn btn-warning">Würfel</button>
-                    <p class="card-text pt-3" id="chTone"></p>
-                </div>
-        </div>
-        <!-- 3. Die Akkorde der 1. Lage CAGEFD B7 Bm7 -->
-        <div class="card border-success m-3 mw-100" style="display: none" id="card3">
-            <h5 class="card-header">Würfel Akkorde der 1. Lage</h5>
-            <div class="card-body" id="akkordeLage1W">
-                <button id="akkLage1ButtonW" type="button" class="btn btn-success">Würfel</button>
-                <h3 class="card-title pt-3" id="akkLeins"></h3>
-                <button id="zeigImg" type="button" class="btn btn-outline-dark btn-sm">Griff</button>
-                <div class="pt-3">
-                    <img src="#" id="imgAkk" class="img-fluid" alt="Akkord Bild" style="display: none ">
-                </div>
+            <div class="picker" role="group" aria-label="Würfel wählen">
+                <button class="pick" data-farbe="blau" id="nav1" type="button" aria-pressed="false">Stammton</button>
+                <button class="pick" data-farbe="gelb" id="nav2" type="button" aria-pressed="false">Chromatik</button>
+                <button class="pick" data-farbe="gruen" id="nav3" type="button" aria-pressed="false">Akkorde 1. Lage</button>
+                <button class="pick" data-farbe="rot" id="nav4" type="button" aria-pressed="false">CAGED Akkorde</button>
+                <button class="pick" data-farbe="orange" id="nav5" type="button" aria-pressed="false">Chaos</button>
             </div>
-        </div>
-        <!--4. CAGED System Akkorde Dur Moll 7 m7 CAGEFD AmEmDm-->  
-        <div class="card border-danger m-3 mw-100" style="display: none" id="card4">
-            <h5 class="card-header">CAGED Akkorde Würfel</h5>
-            <div class="card-body" id="cagedAkkW">
-                <button id="cagedButtonW" type="button" class="btn btn-danger">Würfel</button> 
-                <h3 class="card-text pt-3" id="cagedText"></h3>
-                <button id="zeigImg2" type="button" class="btn btn-outline-dark btn-sm">Griff</button>
-                <div class="pt-3">
-                    <img src="#" id="imgCaged" class="img-fluid" alt="CAGED Akkord-Form Griffbild" style="display: none">
-                </div>
-             </div>
-        </div>
-        <!-- 5. Aufgaben-Karten -->
-        <div class="card border-info m-3 mw-100" style="display: none" id="card5">
-            <h5 class="card-header">Chaos-Würfel</h5>
-            <div class="card-body" id="aufgabenW">
-                <p class="card-text">Würfle eine Chaos-Karte und spiel dein Stück damit. Bleib dran, auch wenn's schwierig wird!</p>
-                <button id="aufgabeButtonW" type="button" class="btn btn-info">Würfel</button>
-                <div class="card border-info text-center mt-3" id="aufgabeKarte" style="display: none">
-                    <div class="card-body">
-                        <h3 class="card-text" id="aufgabeText"></h3>
+
+            <!-- Die einzelnen Würfel – anfangs ausgeblendet -->
+            <div class="wuerfel">
+                <!-- 1. Stammtöne -->
+                <section class="card" data-farbe="blau" id="card1" style="display: none">
+                    <h2 class="card-header">Stammton-Würfel</h2>
+                    <div class="card-body" id="stammtonW">
+                        <button id="stammButtonW" type="button" class="btn">Würfeln</button>
+                        <p class="ergebnis" id="stTone"></p>
                     </div>
-                </div>
+                </section>
+
+                <!-- 2. Chromatik -->
+                <section class="card" data-farbe="gelb" id="card2" style="display: none">
+                    <h2 class="card-header">Chromatik-Würfel</h2>
+                    <div class="card-body" id="chromatikW">
+                        <button id="chromButtonW" type="button" class="btn">Würfeln</button>
+                        <p class="ergebnis" id="chTone"></p>
+                    </div>
+                </section>
+
+                <!-- 3. Die Akkorde der 1. Lage (C A G E F D, B7, Bm7) -->
+                <section class="card" data-farbe="gruen" id="card3" style="display: none">
+                    <h2 class="card-header">Akkorde der 1. Lage</h2>
+                    <div class="card-body" id="akkordeLage1W">
+                        <button id="akkLage1ButtonW" type="button" class="btn">Würfeln</button>
+                        <p class="ergebnis gross" id="akkLeins"></p>
+                        <button id="zeigImg" type="button" class="btn btn-ghost">Griff zeigen</button>
+                        <img src="#" id="imgAkk" class="griff" alt="Griffbild des Akkords" style="display: none">
+                    </div>
+                </section>
+
+                <!-- 4. CAGED-System: Dur, Moll, 7, m7 in den Formen C A G E D -->
+                <section class="card" data-farbe="rot" id="card4" style="display: none">
+                    <h2 class="card-header">CAGED-Akkorde</h2>
+                    <div class="card-body" id="cagedAkkW">
+                        <button id="cagedButtonW" type="button" class="btn">Würfeln</button>
+                        <p class="ergebnis gross" id="cagedText"></p>
+                        <button id="zeigImg2" type="button" class="btn btn-ghost">Griff zeigen</button>
+                        <img src="#" id="imgCaged" class="griff" alt="Griffbild der CAGED-Form" style="display: none">
+                    </div>
+                </section>
+
+                <!-- 5. Chaos-Karten -->
+                <section class="card" data-farbe="orange" id="card5" style="display: none">
+                    <h2 class="card-header">Chaos-Würfel</h2>
+                    <div class="card-body" id="aufgabenW">
+                        <p class="hint">Würfle eine Chaos-Karte und spiel dein Stück damit. Bleib dran, auch wenn's schwierig wird!</p>
+                        <button id="aufgabeButtonW" type="button" class="btn">Würfeln</button>
+                        <div class="chaos-karte" id="aufgabeKarte" style="display: none">
+                            <p id="aufgabeText"></p>
+                        </div>
+                    </div>
+                </section>
             </div>
-        </div>
-     
+        </main>
 
+        <!-- Gemeinsame Fusszeile aller Übe-Tools (Aussehen in marke.css) -->
+        <footer class="ms-foot">
+            <p>Würfel von <a href="https://neu.marcscheidegger.ch/">Marc Scheidegger</a> ·
+            <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.de" rel="license">CC BY-NC-SA 4.0</a></p>
+            <ul>
+                <li><a href="https://neu.marcscheidegger.ch/impressum.html">Impressum</a></li>
+                <li><a href="https://neu.marcscheidegger.ch/datenschutz.html">Datenschutz</a></li>
+            </ul>
+        </footer>
 
-
-
-
-    
-    
-    
-    
-    
-    
-    <script src="https://code.jquery.com/jquery-3.3.1.min.js"
-        integrity="sha384-tsQFqpEReu7ZLhBV2VZlAu7zcOV+rXbYlF2cqB8txI/8aZajjp4Bqd+V6D5IgvKT"
-        crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
-        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
-        crossorigin="anonymous"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
-        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
-        crossorigin="anonymous"></script>
-
-    
-    <script src="zufall.js?v=2"></script> 
-    
+        <!-- jQuery liegt lokal (keine Daten an fremde Server) -->
+        <script src="jquery-3.3.1.min.js"></script>
+        <script src="zufall.js?v=3"></script>
     </body>
 </html>
