@@ -95,7 +95,7 @@ function akkordSvg(name) {
 }
 
 // Wandelt ein Akkord-SVG in ein scharfes PNG (3-fache Auflösung) für Notiz-Apps.
-function akkordPng(name, faktor) {
+function akkordPng(name, faktor, typ) {
     faktor = faktor || 3;
     return new Promise(function (fertig, fehler) {
         var svg = akkordSvg(name);
@@ -110,11 +110,87 @@ function akkordPng(name, faktor) {
             g.fillRect(0, 0, c.width, c.height);
             g.scale(faktor, faktor);
             g.drawImage(bild, 0, 0);
-            c.toBlob(function (blob) { blob ? fertig(blob) : fehler(new Error("PNG fehlgeschlagen")); }, "image/png");
+            c.toBlob(function (blob) { blob ? fertig(blob) : fehler(new Error("Bild fehlgeschlagen")); }, typ || "image/png", 0.92);
         };
         bild.onerror = fehler;
         bild.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
     });
+}
+
+// =============================================================================
+// Alle Akkorde als PDF (A4) – direkt im Browser erzeugt, ohne fremde Bibliothek.
+// Jedes Griffbild kommt als JPEG ins PDF (PDF kann JPEG direkt einbetten).
+// =============================================================================
+function akkordePdf(namen) {
+    namen = namen || Object.keys(AKKORDE);
+    return Promise.all(namen.map(function (n) {
+        return akkordPng(n, 3, "image/jpeg").then(function (b) { return b.arrayBuffer(); });
+    })).then(function (jpegs) {
+        var enc = new TextEncoder();
+        var teile = [], laenge = 0, offsets = [];
+        function schreib(x) {
+            var bytes = typeof x === "string" ? enc.encode(x) : new Uint8Array(x);
+            teile.push(bytes); laenge += bytes.length;
+        }
+        function objekt(nr, kopf, strom) {
+            offsets[nr] = laenge;
+            schreib(nr + " 0 obj\n" + kopf + "\n");
+            if (strom !== undefined) { schreib("stream\n"); schreib(strom); schreib("\nendstream\n"); }
+            schreib("endobj\n");
+        }
+
+        // Seite A4 in Punkt (1/72 Zoll); 4 Spalten
+        var W = 595.28, H = 841.89, rand = 40, spalten = 4, abstand = 12;
+        var zelleB = (W - 2 * rand - (spalten - 1) * abstand) / spalten;
+        var bildB = 214, bildH = 170;                       // Grösse des SVG
+        var zelleH = zelleB * bildH / bildB;
+        var oben = H - 92;                                  // Platz für den Titel
+
+        var bilder = jpegs.map(function (jpeg, i) {
+            return { nr: 6 + i, jpeg: jpeg, spalte: i % spalten, zeile: Math.floor(i / spalten) };
+        });
+        var inhalt = "BT /F1 20 Tf " + rand + " " + (H - 58) + " Td (Akkorde der 1. Lage) Tj ET\n" +
+            "BT /F1 9 Tf " + rand + " " + (H - 74) + " Td (Grundton gelb  -  hohe e-Saite oben, Sattel links) Tj ET\n" +
+            "BT /F1 8 Tf " + rand + " 28 Td (zufall.marcscheidegger.ch  -  Marc Scheidegger  -  CC BY-NC-SA 4.0) Tj ET\n";
+        bilder.forEach(function (b) {
+            var x = rand + b.spalte * (zelleB + abstand);
+            var y = oben - (b.zeile + 1) * zelleH - b.zeile * abstand;
+            inhalt += "q " + zelleB.toFixed(2) + " 0 0 " + zelleH.toFixed(2) + " " + x.toFixed(2) + " " + y.toFixed(2) + " cm /Im" + b.nr + " Do Q\n";
+        });
+
+        schreib("%PDF-1.4\n%âãÏÓ\n");
+        objekt(1, "<< /Type /Catalog /Pages 2 0 R >>");
+        objekt(2, "<< /Type /Pages /Kids [3 0 R] /Count 1 >>");
+        var xobj = bilder.map(function (b) { return "/Im" + b.nr + " " + b.nr + " 0 R"; }).join(" ");
+        objekt(3, "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 " + W + " " + H + "] /Contents 4 0 R " +
+            "/Resources << /Font << /F1 5 0 R >> /XObject << " + xobj + " >> >> >>");
+        objekt(4, "<< /Length " + enc.encode(inhalt).length + " >>", inhalt);
+        objekt(5, "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>");
+        bilder.forEach(function (b) {
+            objekt(b.nr, "<< /Type /XObject /Subtype /Image /Width " + (bildB * 3) + " /Height " + (bildH * 3) +
+                " /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length " + b.jpeg.byteLength + " >>", b.jpeg);
+        });
+
+        // Verzeichnis (xref) mit den Positionen aller Objekte
+        var anzahl = 6 + bilder.length, xref = laenge;
+        var x = "xref\n0 " + anzahl + "\n0000000000 65535 f \n";
+        for (var i = 1; i < anzahl; i++) x += String(offsets[i]).padStart(10, "0") + " 00000 n \n";
+        schreib(x + "trailer\n<< /Size " + anzahl + " /Root 1 0 R >>\nstartxref\n" + xref + "\n%%EOF\n");
+        return new Blob(teile, { type: "application/pdf" });
+    });
+}
+
+function akkordePdfHerunterladen(knopf) {
+    var text = knopf && knopf.textContent;
+    if (knopf) knopf.textContent = "PDF wird erstellt …";
+    akkordePdf().then(function (blob) {
+        var a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "Akkorde-1-Lage.pdf";
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    }).finally(function () { if (knopf) knopf.textContent = text; });
 }
 
 // Bild herunterladen, teilen (iPad/iPhone → Notiz-App) oder in die Zwischenablage kopieren

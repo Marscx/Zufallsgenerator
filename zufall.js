@@ -521,3 +521,23 @@ $("#nav3").on("click", function() { $wuerfelUmschalten(3); });
 $("#nav4").on("click", function() { $wuerfelUmschalten(4); });
 // Aufgaben Würfel (Chaos)
 $("#nav5").on("click", function() { $wuerfelUmschalten(5); });
+
+// Übersicht aller Akkorde der 1. Lage ein-/ausblenden; Diagramme werden beim ersten Öffnen gezeichnet
+$("#alleAkkordeButton").on("click", function () {
+    var $panel = $("#alleAkkorde");
+    if ($("#alleAkkordeRaster").is(":empty")) {
+        Object.keys(AKKORDE).forEach(function (name) {
+            $("#alleAkkordeRaster").append('<div class="alle-griff">' + akkordSvg(name) + '</div>');
+        });
+    }
+    var offen = $panel.prop("hidden");
+    $panel.prop("hidden", !offen);
+    $(this).attr("aria-expanded", offen ? "true" : "false");
+    if (offen) $panel[0].scrollIntoView({ behavior: "smooth", block: "start" });
+});
+$("#alleAkkordeZu").on("click", function () {
+    $("#alleAkkorde").prop("hidden", true);
+    $("#alleAkkordeButton").attr("aria-expanded", "false");
+});
+// Alle Akkorde als PDF (A4) herunterladen – erzeugt in akkorde.js
+$("#alleAkkordePdf").on("click", function () { akkordePdfHerunterladen(this); });
