@@ -16,7 +16,9 @@ Gemeinsamer Auftritt mit [marcscheidegger.ch](https://marcscheidegger.ch): `mark
 Kopfleiste (Navigation zwischen den Übe-Tools), Fusszeile und Markenfarben. Die Datei ist in allen
 Übe-Tools identisch – Änderungen überall gleich übernehmen.
 
-Die Griffbilder liegen auf marcscheidegger.ch im Ordner `MarcBuch/Content/`.
+Die Akkorde der 1. Lage werden in `akkorde.js` als SVG gezeichnet (Griffe als Daten, z. B. C = `x32010`,
+Grundton gelb) und lassen sich als PNG speichern, kopieren oder teilen – etwa für Notiz-Apps.
+Die Bilder der CAGED-Formen liegen noch auf marcscheidegger.ch im Ordner `MarcBuch/Content/`.
 
 ## Licence
 

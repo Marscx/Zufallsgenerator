@@ -433,15 +433,22 @@ $("#akkLage1ButtonW").on("click", function() {
     for (var n = 0; n < 1; n++) {
         $akk.push(Math.floor(Math.random()*$akkL1.length));
         $("#akkLeins").append($akkL1[$akk[n]].name + " ");
-        $("#imgAkk").attr("src", $akkL1[$akk[n]].urlGriff);
+        // Griffdiagramm aus akkorde.js zeichnen (statt Bild von MarcBuch)
+        $("#imgAkk .griff-svg").html(akkordSvg($akkL1[$akk[n]].name));
+        $("#imgAkk").data("akkord", $akkL1[$akk[n]].name);
         
     }
         $akk.length = 0;
 });
-// Griffbild Akkorde 1. Lage einblenden
+// Griffbild Akkorde 1. Lage einblenden (erst nach dem ersten Würfeln)
 $("#zeigImg").on("click", function(){
-    $("#imgAkk").fadeIn(1000);
+    if ($("#imgAkk").data("akkord")) $("#imgAkk").fadeIn(600);
 });
+// Griffbild als PNG speichern, kopieren oder teilen (Funktionen in akkorde.js)
+$("#griffSpeichern").on("click", function () { akkordSpeichern($("#imgAkk").data("akkord")); });
+$("#griffKopieren").on("click", function () { akkordKopieren($("#imgAkk").data("akkord"), this); });
+$("#griffTeilen").on("click", function () { akkordTeilen($("#imgAkk").data("akkord")); });
+if (akkordTeilenMoeglich()) $("#griffTeilen").prop("hidden", false);
 // beim drücken des Kopfes zufällige Anzeige eines Chromatischen Akkords Dur Moll 7 maj7 m7b5
 var $tonleiterTon = [];
 var $vorZ = [];

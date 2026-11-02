@@ -100,6 +100,13 @@ body {
 /* Griffbilder (weisser Hintergrund, auch im dunklen Modus gut lesbar) */
 .griff { display: block; max-width: 100%; height: auto; margin-top: 14px; border-radius: 10px; background: #fff; }
 
+/* Griffdiagramm (SVG aus akkorde.js) mit Knöpfen zum Speichern, Kopieren, Teilen */
+.griffbild { margin-top: 14px; }
+.griff-svg svg { display: block; width: 100%; max-width: 360px; height: auto; border-radius: 14px; box-shadow: inset 0 0 0 1px var(--line); }
+.griff-aktionen { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.griff-aktionen .btn { font-size: .85rem; padding: 6px 14px; }
+.griff-aktionen [hidden] { display: none; }
+
 /* Chaos-Karte */
 .chaos-karte {
     margin-top: 16px; padding: 22px 18px; text-align: center;
