@@ -214,9 +214,19 @@ function akkordTeilen(name) {
     }).catch(function () { /* Teilen abgebrochen */ });
 }
 function akkordKopieren(name, knopf) {
-    if (!navigator.clipboard || !window.ClipboardItem) { akkordSpeichern(name); return; }
+    // Kurze Rückmeldung im Knopf, danach wieder der ursprüngliche Text
+    function melden(text) {
+        if (!knopf) return;
+        var alt = knopf.dataset.text || knopf.textContent;
+        knopf.dataset.text = alt;
+        knopf.textContent = text;
+        setTimeout(function () { knopf.textContent = alt; }, 1800);
+    }
+    // Ohne Zugriff auf die Zwischenablage wird das Bild stattdessen heruntergeladen
+    function ersatz() { akkordSpeichern(name); melden("Gespeichert ⬇"); }
+    if (!navigator.clipboard || !window.ClipboardItem) { ersatz(); return; }
     // Safari verlangt, dass das Bild als Promise übergeben wird
-    navigator.clipboard.write([new ClipboardItem({ "image/png": akkordPng(name) })]).then(function () {
-        if (knopf) { var t = knopf.textContent; knopf.textContent = "Kopiert ✓"; setTimeout(function () { knopf.textContent = t; }, 1500); }
-    }).catch(function () { akkordSpeichern(name); });
+    navigator.clipboard.write([new ClipboardItem({ "image/png": akkordPng(name) })])
+        .then(function () { melden("Kopiert ✓"); })
+        .catch(ersatz);
 }
