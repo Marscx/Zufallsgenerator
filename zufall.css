@@ -118,6 +118,7 @@ body {
 .alle-aktionen { display: flex; flex-wrap: wrap; gap: 8px; }
 .alle-raster { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 180px), 1fr)); }
 .alle-griff svg { display: block; width: 100%; height: auto; border-radius: 14px; box-shadow: inset 0 0 0 1px var(--line); }
+.alle-griff .btn { margin-top: 8px; font-size: .82rem; padding: 5px 12px; }
 #alleAkkordeButton { margin-left: 6px; }
 
 /* Chaos-Karte */

@@ -527,7 +527,12 @@ $("#alleAkkordeButton").on("click", function () {
     var $panel = $("#alleAkkorde");
     if ($("#alleAkkordeRaster").is(":empty")) {
         Object.keys(AKKORDE).forEach(function (name) {
-            $("#alleAkkordeRaster").append('<div class="alle-griff">' + akkordSvg(name) + '</div>');
+            var $karte = $('<div class="alle-griff">' + akkordSvg(name) +
+                '<button type="button" class="btn btn-ghost">PNG speichern</button></div>');
+            // Jeder Akkord einzeln als PNG (Funktion in akkorde.js)
+            $karte.find("button").attr("aria-label", "Akkord " + name + " als PNG speichern")
+                .on("click", function () { akkordSpeichern(name); });
+            $("#alleAkkordeRaster").append($karte);
         });
     }
     var offen = $panel.prop("hidden");
