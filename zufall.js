@@ -426,22 +426,43 @@ $("#chromButtonW").on("click", function() {
 });
      
 // beim drücken des Knopfes zufällige Anzeige eines Akkordes der 1. Lage - Archetypen
-var $akk = [];
+// Akkorde, die zuletzt gewusst wurden (Haken im Lernstand), kommen nicht mehr vor.
+// Nach einem Kreuz oder nach "Lernstand löschen" sind sie wieder dabei.
+function $offeneAkkorde() {
+    var daten = $lernstandLesen();
+    return $akkL1.filter(function (a) { return !(daten[a.name] && daten[a.name].zuletzt === "ja"); });
+}
+// Hinweis unter dem Würfel: wie viele Akkorde noch im Spiel sind
+function $akkRestAnzeigen() {
+    var offen = $offeneAkkorde().length, alle = $akkL1.length;
+    $("#akkRest").text(offen === alle ? "" :
+        offen ? "Noch " + offen + " von " + alle + " Akkorden im Würfel – gewusste kommen nicht mehr vor."
+              : "Alle " + alle + " Akkorde gewusst! Unter „Alle Akkorde“ kannst du den Lernstand löschen und neu beginnen.");
+}
+var $letzterAkkord = null;
 $("#akkLage1ButtonW").on("click", function() {
     $("#akkLeins").empty();
     $("#imgAkk").hide();
-    for (var n = 0; n < 1; n++) {
-        $akk.push(Math.floor(Math.random()*$akkL1.length));
-        $("#akkLeins").append($akkL1[$akk[n]].name + " ");
-        // Griffdiagramm aus akkorde.js zeichnen (statt Bild von MarcBuch)
-        $("#imgAkk .griff-svg").html(akkordSvg($akkL1[$akk[n]].name));
-        $("#imgAkk").data("akkord", $akkL1[$akk[n]].name);
-        // Frage "Gewusst?" für diesen Akkord anzeigen
-        $("#gewusst").prop("hidden", false).data("akkord", $akkL1[$akk[n]].name);
-        $("#gewusst button").prop("disabled", false);
-        $("#gewusstMeldung").text("");
+    var offen = $offeneAkkorde();
+    $akkRestAnzeigen();
+    if (!offen.length) {
+        $("#akkLeins").text("Alle gewusst! 🎉");
+        $("#gewusst").prop("hidden", true);
+        $("#imgAkk").removeData("akkord");
+        return;
     }
-        $akk.length = 0;
+    // Möglichst nicht zweimal denselben Akkord hintereinander
+    var auswahl = offen.length > 1 ? offen.filter(function (a) { return a.name !== $letzterAkkord; }) : offen;
+    var name = auswahl[Math.floor(Math.random() * auswahl.length)].name;
+    $letzterAkkord = name;
+    $("#akkLeins").text(name);
+    // Griffdiagramm aus akkorde.js zeichnen (statt Bild von MarcBuch)
+    $("#imgAkk .griff-svg").html(akkordSvg(name));
+    $("#imgAkk").data("akkord", name);
+    // Frage "Gewusst?" für diesen Akkord anzeigen
+    $("#gewusst").prop("hidden", false).data("akkord", name);
+    $("#gewusst button").prop("disabled", false);
+    $("#gewusstMeldung").text("");
 });
 // Griffbild Akkorde 1. Lage einblenden (erst nach dem ersten Würfeln)
 $("#zeigImg").on("click", function(){
@@ -558,12 +579,13 @@ function $lernstandAnzeigen() {
         }
     });
     $("#lernstand").text(gewusst + " von " + namen.length + " Akkorden zuletzt gewusst · " + geuebt + " geübt");
+    $akkRestAnzeigen();
 }
 $("#gewusstJa, #gewusstNein").on("click", function () {
     var name = $("#gewusst").data("akkord"), ja = this.id === "gewusstJa";
     $lernstandEintragen(name, ja);
     $("#gewusst button").prop("disabled", true);
-    $("#gewusstMeldung").text(ja ? "Super! Gespeichert." : "Gespeichert – weiter üben.");
+    $("#gewusstMeldung").text(ja ? "Super! Kommt nicht mehr vor." : "Gespeichert – kommt wieder.");
 });
 $("#lernstandReset").on("click", function () {
     if (!confirm("Lernstand aller Akkorde löschen?")) return;
@@ -598,3 +620,6 @@ $("#alleAkkordeZu").on("click", function () {
 });
 // Alle Akkorde als PDF (A4) herunterladen – erzeugt in akkorde.js
 $("#alleAkkordePdf").on("click", function () { akkordePdfHerunterladen(this); });
+
+// Beim Laden anzeigen, wie viele Akkorde noch im Würfel sind
+$akkRestAnzeigen();

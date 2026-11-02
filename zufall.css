@@ -122,6 +122,8 @@ body {
 #alleAkkordeButton { margin-left: 6px; }
 
 /* Lernstand: Gewusst ja/nein */
+.rest { font-size: .85rem; margin: 10px 0 0; }
+.rest:empty { display: none; }
 .gewusst { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 12px; }
 .gewusst[hidden] { display: none; }
 .gewusst > span:first-child { font-weight: 600; color: var(--muted); margin-right: 2px; }
