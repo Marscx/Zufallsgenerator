@@ -121,6 +121,28 @@ body {
 .alle-griff .btn { margin-top: 8px; font-size: .82rem; padding: 5px 12px; }
 #alleAkkordeButton { margin-left: 6px; }
 
+/* Lernstand: Gewusst ja/nein */
+.gewusst { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 12px; }
+.gewusst[hidden] { display: none; }
+.gewusst > span:first-child { font-weight: 600; color: var(--muted); margin-right: 2px; }
+.gewusst .btn { padding: 6px 14px; font-size: .9rem; }
+.btn-ja { --c: #5cc96b; --c-ink: #0b1220; }
+.btn-nein { --c: #d8262c; --c-ink: #ffffff; }
+.gewusst .btn:disabled { opacity: .45; cursor: default; filter: none; }
+.gewusst-meldung { font-size: .9rem; color: var(--muted); }
+
+/* Übersicht: Haken/Kreuz pro Akkord */
+.alle-griff { position: relative; }
+.marke {
+    position: absolute; top: 8px; right: 8px; z-index: 1; width: 30px; height: 30px; border-radius: 50%;
+    display: grid; place-items: center; font-weight: 700; font-size: 1rem;
+}
+.marke.ja { background: #5cc96b; color: #0b1220; }
+.marke.nein { background: #d8262c; color: #fff; }
+.alle-fuss { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.zaehler { font-size: .8rem; color: var(--muted); margin-top: 8px; font-variant-numeric: tabular-nums; }
+.lernstand { margin: 4px 0 0; color: var(--muted); font-size: .9rem; }
+
 /* Chaos-Karte */
 .chaos-karte {
     margin-top: 16px; padding: 22px 18px; text-align: center;

@@ -436,7 +436,10 @@ $("#akkLage1ButtonW").on("click", function() {
         // Griffdiagramm aus akkorde.js zeichnen (statt Bild von MarcBuch)
         $("#imgAkk .griff-svg").html(akkordSvg($akkL1[$akk[n]].name));
         $("#imgAkk").data("akkord", $akkL1[$akk[n]].name);
-        
+        // Frage "Gewusst?" für diesen Akkord anzeigen
+        $("#gewusst").prop("hidden", false).data("akkord", $akkL1[$akk[n]].name);
+        $("#gewusst button").prop("disabled", false);
+        $("#gewusstMeldung").text("");
     }
         $akk.length = 0;
 });
@@ -522,13 +525,60 @@ $("#nav4").on("click", function() { $wuerfelUmschalten(4); });
 // Aufgaben Würfel (Chaos)
 $("#nav5").on("click", function() { $wuerfelUmschalten(5); });
 
+// ---------- Lernstand ----------
+// Pro Akkord: letzte Antwort ("ja"/"nein") und wie oft gewusst / nicht gewusst.
+// Gespeichert nur im Browser dieses Geräts (localStorage), nichts geht an einen Server.
+var LERNSTAND_KEY = "wuerfel-lernstand-akkorde1";
+function $lernstandLesen() {
+    try { return JSON.parse(localStorage.getItem(LERNSTAND_KEY)) || {}; } catch (e) { return {}; }
+}
+function $lernstandSchreiben(daten) {
+    try { localStorage.setItem(LERNSTAND_KEY, JSON.stringify(daten)); } catch (e) { /* privater Modus: nicht speichern */ }
+}
+function $lernstandEintragen(name, gewusst) {
+    var daten = $lernstandLesen();
+    var e = daten[name] || { ja: 0, nein: 0 };
+    e[gewusst ? "ja" : "nein"]++;
+    e.zuletzt = gewusst ? "ja" : "nein";
+    daten[name] = e;
+    $lernstandSchreiben(daten);
+    $lernstandAnzeigen();
+}
+// Haken/Kreuz in der Übersicht und Zusammenfassung oben aktualisieren
+function $lernstandAnzeigen() {
+    var daten = $lernstandLesen(), namen = Object.keys(AKKORDE), gewusst = 0, geuebt = 0;
+    $("#alleAkkordeRaster .alle-griff").each(function () {
+        var name = $(this).data("akkord"), e = daten[name], $marke = $(this).find(".marke");
+        $marke.removeClass("ja nein").text("").attr("title", "Noch nicht geübt");
+        $(this).find(".zaehler").text(e ? e.ja + " ✓ · " + e.nein + " ✗" : "noch nicht geübt");
+        if (e) {
+            geuebt++;
+            if (e.zuletzt === "ja") { gewusst++; $marke.addClass("ja").text("✓").attr("title", "Zuletzt gewusst"); }
+            else { $marke.addClass("nein").text("✗").attr("title", "Zuletzt nicht gewusst"); }
+        }
+    });
+    $("#lernstand").text(gewusst + " von " + namen.length + " Akkorden zuletzt gewusst · " + geuebt + " geübt");
+}
+$("#gewusstJa, #gewusstNein").on("click", function () {
+    var name = $("#gewusst").data("akkord"), ja = this.id === "gewusstJa";
+    $lernstandEintragen(name, ja);
+    $("#gewusst button").prop("disabled", true);
+    $("#gewusstMeldung").text(ja ? "Super! Gespeichert." : "Gespeichert – weiter üben.");
+});
+$("#lernstandReset").on("click", function () {
+    if (!confirm("Lernstand aller Akkorde löschen?")) return;
+    try { localStorage.removeItem(LERNSTAND_KEY); } catch (e) {}
+    $lernstandAnzeigen();
+});
+
 // Übersicht aller Akkorde der 1. Lage ein-/ausblenden; Diagramme werden beim ersten Öffnen gezeichnet
 $("#alleAkkordeButton").on("click", function () {
     var $panel = $("#alleAkkorde");
     if ($("#alleAkkordeRaster").is(":empty")) {
         Object.keys(AKKORDE).forEach(function (name) {
-            var $karte = $('<div class="alle-griff">' + akkordSvg(name) +
-                '<button type="button" class="btn btn-ghost">Kopieren</button></div>');
+            var $karte = $('<div class="alle-griff"><span class="marke" aria-hidden="true"></span>' + akkordSvg(name) +
+                '<div class="alle-fuss"><button type="button" class="btn btn-ghost">Kopieren</button>' +
+                '<span class="zaehler"></span></div></div>').data("akkord", name);
             // Jeder Akkord einzeln als Bild in die Zwischenablage (Funktion in akkorde.js;
             // ohne Zwischenablage-Zugriff wird das PNG stattdessen heruntergeladen)
             $karte.find("button").attr("aria-label", "Akkord " + name + " in die Zwischenablage kopieren")
@@ -536,6 +586,7 @@ $("#alleAkkordeButton").on("click", function () {
             $("#alleAkkordeRaster").append($karte);
         });
     }
+    $lernstandAnzeigen();
     var offen = $panel.prop("hidden");
     $panel.prop("hidden", !offen);
     $(this).attr("aria-expanded", offen ? "true" : "false");
