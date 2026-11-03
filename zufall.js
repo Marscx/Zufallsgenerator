@@ -619,7 +619,8 @@ $("#alleAkkordeZu").on("click", function () {
     $("#alleAkkordeButton").attr("aria-expanded", "false");
 });
 // Alle Akkorde als PDF (A4) herunterladen – erzeugt in akkorde.js
-$("#alleAkkordePdf").on("click", function () { akkordePdfHerunterladen(this); });
+// Mit Lernstand (Haken/Kreuz, Zähler), sobald einer vorhanden ist
+$("#alleAkkordePdf").on("click", function () { akkordePdfHerunterladen(this, $lernstandLesen()); });
 
 // Beim Laden anzeigen, wie viele Akkorde noch im Würfel sind
 $akkRestAnzeigen();
