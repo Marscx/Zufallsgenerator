@@ -108,7 +108,10 @@ body {
 .griff-aktionen [hidden] { display: none; }
 
 /* Notenbild der Ton-Würfel (noten.js) */
-.noten-knopf { margin-top: 4px; }
+.aufdecken { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 14px; }
+.aufdecken > span { color: var(--muted, #5a6785); font-weight: 600; margin-right: 4px; }
+.aufdecken[hidden], .ergebnis[hidden] { display: none; }
+.noten-knopf { font-size: .9rem; padding: 7px 16px; }
 .noten-knopf[aria-pressed="true"] { background: var(--c); border-color: var(--c); color: var(--c-ink); }
 .notenbild[hidden] { display: none; }
 .notenbild .griff-svg svg { max-width: 420px; }

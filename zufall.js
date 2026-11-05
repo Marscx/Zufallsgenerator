@@ -426,45 +426,42 @@ $("#chromButtonW").on("click", function() {
     $toneCh.length = 0;
 });
 
-// ---------- Notenbilder zu den Ton-Würfeln (noten.js) ----------
-// Knopf "Noten zeigen" blendet die gewürfelten Töne als Noten ein oder aus.
-// Ob die Noten offen sind, merkt sich der Browser je Würfel (nur auf diesem Gerät).
-var NOTEN_KEY = "wuerfel-noten-anzeige";
-function $notenEinstellung() {
-    try { return JSON.parse(localStorage.getItem(NOTEN_KEY)) || {}; } catch (e) { return {}; }
-}
-// Zeichnet die Töne ins Notenfeld des Würfels ("st" = Stammton, "ch" = Chromatik)
+// ---------- Aufdecken: Namen und Notenbild der Ton-Würfel (noten.js) ----------
+// Nach jedem Wurf ist zuerst nichts zu sehen. Mit "Namen zeigen" bzw. "Noten zeigen"
+// deckt man auf, was man zuerst sehen will – und kann so Noten lesen oder Töne finden üben.
+// Zeichnet die Töne ins Notenfeld des Würfels ("st" = Stammton, "ch" = Chromatik) und verdeckt alles
 function $notenZeichnen(wuerfel, toene) {
     var feld = $("#" + wuerfel + "Noten");
     feld.data("toene", toene);
-    feld.find(".griff-svg").html(notenSvg(toene));
-    $notenAnzeigen(wuerfel);
+    feld.find(".griff-svg").html(notenSvg(toene, { namen: false }));   // ohne Namen, sonst wäre alles verraten
+    $("#" + wuerfel + "Aufdecken").prop("hidden", false);
+    $aufdecken(wuerfel, "Namen", false);
+    $aufdecken(wuerfel, "Noten", false);
 }
-// Notenfeld zeigen, wenn eingeschaltet und schon gewürfelt wurde; Knopf beschriften
-function $notenAnzeigen(wuerfel) {
-    var an = !!$notenEinstellung()[wuerfel];
-    var feld = $("#" + wuerfel + "Noten");
-    feld.prop("hidden", !(an && feld.data("toene")));
-    $("#" + wuerfel + "NotenKnopf").attr("aria-pressed", an).text(an ? "Noten ausblenden" : "Noten zeigen");
+// Namen (p.ergebnis) bzw. Noten (Notenfeld) zeigen oder verdecken; Knopf beschriften
+function $aufdecken(wuerfel, was, an) {
+    var ziel = was === "Namen" ? $("#" + wuerfel + "Tone") : $("#" + wuerfel + "Noten");
+    ziel.prop("hidden", !an);
+    $("#" + wuerfel + was + "Knopf").attr("aria-pressed", an).text((an ? was + " verdecken" : was + " zeigen"));
 }
+// Frühere Einstellung "Noten immer zeigen" wird nicht mehr gebraucht
+try { localStorage.removeItem("wuerfel-noten-anzeige"); } catch (e) {}
 ["st", "ch"].forEach(function (wuerfel) {
     var feld = $("#" + wuerfel + "Noten");
     var datei = (wuerfel === "st" ? "Stammtoene" : "Chromatik") + "-Noten.png";
-    $("#" + wuerfel + "NotenKnopf").on("click", function () {
-        var e = $notenEinstellung();
-        e[wuerfel] = !e[wuerfel];
-        try { localStorage.setItem(NOTEN_KEY, JSON.stringify(e)); } catch (err) {}
-        $notenAnzeigen(wuerfel);
+    ["Namen", "Noten"].forEach(function (was) {
+        $("#" + wuerfel + was + "Knopf").on("click", function () {
+            $aufdecken(wuerfel, was, this.getAttribute("aria-pressed") !== "true");
+        });
     });
     feld.find("[data-noten]").on("click", function () {
-        var svg = notenSvg(feld.data("toene") || []);
+        var svg = notenSvg(feld.data("toene") || []);       // Bild für Notiz-App: mit Namen als Lösung
         var art = this.dataset.noten;
         if (art === "speichern") bildSpeichern(svg, datei);
         if (art === "kopieren") bildKopieren(svg, datei, this);
         if (art === "teilen") bildTeilen(svg, datei, "Noten");
     });
     if (akkordTeilenMoeglich()) feld.find('[data-noten="teilen"]').prop("hidden", false);
-    $notenAnzeigen(wuerfel);
 });
      
 // beim drücken des Knopfes zufällige Anzeige eines Akkordes der 1. Lage - Archetypen
