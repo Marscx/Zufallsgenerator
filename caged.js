@@ -41,9 +41,27 @@ function tonklasse(name) {
     return (t + 12) % 12;
 }
 
+// Farbschema nach Marcs Unterricht, in Tönen passend zur Website:
+//   Akkordtöne in der Farbe des Modus: ionisch und äolisch blau, lydisch grün, mixolydisch rot
+//   Leitton immer rot, Gleitton immer grün (nur sichtbar mit "Tonleiter zeigen")
+//   Grundton: Farbe des Modus mit dickem dunklem Ring
+var MODUS_FARBE = {
+    ionisch:     { fuell: "#2f6fde", text: "#ffffff" },
+    aeolisch:    { fuell: "#2f6fde", text: "#ffffff" },
+    lydisch:     { fuell: "#3fae6a", text: "#ffffff" },
+    mixolydisch: { fuell: "#d9483b", text: "#ffffff" }
+};
+var LEITTON_FARBE = { fuell: "#d9483b", text: "#ffffff" };
+var GLEITTON_FARBE = { fuell: "#3fae6a", text: "#ffffff" };
+// Leitton und Gleitton als Halbtonabstand vom Akkordgrundton.
+// Gezählt wie in der Dur-Tonleiter: Leitton = 7 (Halbton unter der 1), Gleitton = 4 (Halbton über der 3).
+// In Äolisch entspricht das den Tönen 2 (→ b3) und b6 (→ 5), also Stufe 7 und 4 der parallelen Dur-Tonleiter.
+var LEIT_GLEIT = {
+    ionisch:  { leit: 11, gleit: 5 },
+    aeolisch: { leit: 2,  gleit: 8 }
+};
 var CAGED_FARBE = {
-    linie: "#0b1220", grund: "#f2b544", akkord: "#0b1220", akkordText: "#ffffff",
-    leiter: "#ffffff", leiterText: "#0b1220", leiterRand: "#8fa8dc", papier: "#ffffff", grau: "#5a6785"
+    linie: "#0b1220", leiter: "#ffffff", leiterText: "#0b1220", leiterRand: "#8fa8dc", papier: "#ffffff", grau: "#5a6785"
 };
 
 // Zeichnet eine Form für einen Akkord.
@@ -57,6 +75,8 @@ function cagedSvg(grundName, formName, optionen) {
     var grund = tonklasse(grundName);
     var stufen = !f.moll ? DUR_STUFEN : (optionen.mollDurZahlen ? MOLL_DURZAHLEN : MOLL_STUFEN);
     var akkordStufen = f.moll ? [0, 3, 7] : [0, 4, 7];
+    var modus = f.moll ? "aeolisch" : "ionisch";
+    var farbeModus = MODUS_FARBE[modus], lg = LEIT_GLEIT[modus];
 
     // Fenster verschieben: so tief wie möglich, aber nicht unter den Sattel.
     // Teile unter Bund 0 werden abgeschnitten (offene Lage).
@@ -112,11 +132,13 @@ function cagedSvg(grundName, formName, optionen) {
             var istAkkord = akkordStufen.indexOf(abstand) >= 0;
             if (!istAkkord && !optionen.tonleiter) continue;
             var cx = bundX(bund);
+            var istGrund = abstand === 0;
             var r = istAkkord ? 10 : 8.5;
-            var fuellung = abstand === 0 ? CAGED_FARBE.grund : (istAkkord ? CAGED_FARBE.akkord : CAGED_FARBE.leiter);
-            var rand = istAkkord ? CAGED_FARBE.linie : CAGED_FARBE.leiterRand;
-            var textfarbe = abstand === 0 ? CAGED_FARBE.linie : (istAkkord ? CAGED_FARBE.akkordText : CAGED_FARBE.leiterText);
-            teile.push('<circle cx="' + cx + '" cy="' + yy + '" r="' + r + '" fill="' + fuellung + '" stroke="' + rand + '" stroke-width="1.6"/>');
+            var farbe = istAkkord ? farbeModus : (abstand === lg.leit ? LEITTON_FARBE : (abstand === lg.gleit ? GLEITTON_FARBE : null));
+            var fuellung = farbe ? farbe.fuell : CAGED_FARBE.leiter;
+            var textfarbe = farbe ? farbe.text : CAGED_FARBE.leiterText;
+            var rand = istGrund ? CAGED_FARBE.linie : (farbe ? farbe.fuell : CAGED_FARBE.leiterRand);
+            teile.push('<circle cx="' + cx + '" cy="' + yy + '" r="' + r + '" fill="' + fuellung + '" stroke="' + rand + '" stroke-width="' + (istGrund ? 3.2 : 1.6) + '"/>');
             teile.push('<text x="' + cx + '" y="' + (yy + 4) + '" text-anchor="middle" ' + schrift + ' font-size="' + (stufe.length > 1 ? 9.5 : 11) + '" font-weight="700" fill="' + textfarbe + '">' + stufe + '</text>');
         }
     }

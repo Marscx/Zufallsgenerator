@@ -18,6 +18,8 @@
             .vergleich { display: grid; gap: 14px 18px; grid-template-columns: 1fr 1fr; align-items: center; }
             .vergleich img { width: 100%; background: #fff; border-radius: 10px; }
             h2 { margin: 32px 0 12px; }
+            .legende { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 10px 0 0; font-size: .9rem; color: var(--muted); }
+            .legende i { display: inline-block; width: 14px; height: 14px; border-radius: 50%; margin-right: 6px; vertical-align: -2px; }
         </style>
     </head>
     <body>
@@ -25,7 +27,14 @@
             <div class="tool-head">
                 <span class="kicker">Entwurf</span>
                 <h1>CAGED-Formen</h1>
-                <p class="hint">Die Formen werden für jede Tonart berechnet und im richtigen Bund gezeigt. Grundton gelb, Akkordtöne dunkel, Tonleitertöne hell.</p>
+                <p class="hint">Die Formen werden für jede Tonart berechnet und im richtigen Bund gezeigt.</p>
+                <p class="legende">
+                    <span><i style="background:#2f6fde;box-shadow:0 0 0 2.5px #0b1220"></i>Grundton</span>
+                    <span><i style="background:#2f6fde"></i>Akkordton (ionisch / äolisch)</span>
+                    <span><i style="background:#d9483b"></i>Leitton</span>
+                    <span><i style="background:#3fae6a"></i>Gleitton</span>
+                    <span><i style="background:#fff;box-shadow:inset 0 0 0 1.5px #8fa8dc"></i>Tonleiterton</span>
+                </p>
             </div>
 
             <div class="steuerung">
@@ -39,7 +48,7 @@
                 <label>Akkord
                     <select id="art"><option value="">Dur</option><option value="m">Moll</option></select>
                 </label>
-                <label><input type="checkbox" id="tonleiter"> Tonleiter zeigen</label>
+                <label><input type="checkbox" id="tonleiter" checked> Tonleiter zeigen</label>
                 <label><input type="checkbox" id="durzahlen"> Moll mit Dur-Zahlen (Grundton = 6)</label>
             </div>
             <div class="bogen" id="bogen"></div>
@@ -49,7 +58,7 @@
             <div class="vergleich" id="vergleich"></div>
         </main>
 
-        <script src="caged.js?v=2"></script>
+        <script src="caged.js?v=3"></script>
         <script>
             var ALT = {
                 "C-Form": "8DAE3791-8E2F-452F-A4A7-125CA0126917", "A-Form": "B9AE24B1-ED9E-4A40-9394-4B8E4BF6140E",
