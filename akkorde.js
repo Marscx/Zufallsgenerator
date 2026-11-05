@@ -121,8 +121,8 @@ function svgBild(svg, faktor, typ) {
 }
 
 // =============================================================================
-// Alle Akkorde als PDF (A4) – direkt im Browser erzeugt, ohne fremde Bibliothek.
-// Jedes Griffbild kommt als JPEG ins PDF (PDF kann JPEG direkt einbetten).
+// PDF (A4) aus Griffbildern – direkt im Browser erzeugt, ohne fremde Bibliothek.
+// Jedes Bild kommt als JPEG ins PDF (PDF kann JPEG direkt einbetten).
 // =============================================================================
 // Text für PDF-Strings: Sonderzeichen ( ) \ maskieren, Umlaute & Co. als WinAnsi-Oktalcode
 function pdfText(text) {
@@ -132,13 +132,15 @@ function pdfText(text) {
     });
 }
 
-// lernstand (optional): { "C": { ja: 3, nein: 1, zuletzt: "ja" }, … } – dann zeigt das PDF
-// pro Akkord Haken/Kreuz und Zähler sowie eine Zusammenfassung unter dem Titel.
-function akkordePdf(namen, lernstand) {
-    namen = namen || Object.keys(AKKORDE);
-    var mitStand = !!(lernstand && Object.keys(lernstand).length);
-    return Promise.all(namen.map(function (n) {
-        return akkordPng(n, 3, "image/jpeg").then(function (b) { return b.arrayBuffer(); });
+// Erstellt ein A4-PDF aus mehreren SVG-Diagrammen gleicher Grösse.
+//   opt.svgs       Liste der SVG-Texte
+//   opt.breite/hoehe  Grösse eines SVG (Pixel), opt.spalten  Anzahl Spalten
+//   opt.titel, opt.untertitel, opt.zusatz (optionale dritte Zeile)
+//   opt.unterText  optionale Liste: kleiner Text unter jedem Bild
+//   opt.marken     optionale Liste: "ja" (Haken) / "nein" (Kreuz) / null oben rechts im Bild
+function svgPdf(opt) {
+    return Promise.all(opt.svgs.map(function (svg) {
+        return svgBild(svg, 3, "image/jpeg").then(function (b) { return b.arrayBuffer(); });
     })).then(function (jpegs) {
         var enc = new TextEncoder();
         var teile = [], laenge = 0, offsets = [];
@@ -153,13 +155,12 @@ function akkordePdf(namen, lernstand) {
             schreib("endobj\n");
         }
 
-        // Seite A4 in Punkt (1/72 Zoll); 4 Spalten
-        var W = 595.28, H = 841.89, rand = 40, spalten = 4, abstand = 12;
+        // Seite A4 in Punkt (1/72 Zoll)
+        var W = 595.28, H = 841.89, rand = 40, spalten = opt.spalten, abstand = 12;
         var zelleB = (W - 2 * rand - (spalten - 1) * abstand) / spalten;
-        var bildB = 214, bildH = 170;                       // Grösse des SVG
-        var zelleH = zelleB * bildH / bildB;
-        var oben = H - (mitStand ? 106 : 92);               // Platz für Titel (und Zusammenfassung)
-        var textZeile = mitStand ? 14 : 0;                  // Platz unter jedem Bild für den Zähler
+        var zelleH = zelleB * opt.hoehe / opt.breite;
+        var oben = H - (opt.zusatz ? 106 : 92);             // Platz für Titel (und Zusatzzeile)
+        var textZeile = opt.unterText ? 14 : 0;             // Platz unter jedem Bild für Text
 
         var bilder = jpegs.map(function (jpeg, i) {
             return { nr: 6 + i, jpeg: jpeg, spalte: i % spalten, zeile: Math.floor(i / spalten) };
@@ -168,31 +169,25 @@ function akkordePdf(namen, lernstand) {
             return (grau ? "0.35 0.40 0.52 rg " : "0.04 0.07 0.13 rg ") +
                 "BT /F1 " + groesse + " Tf " + x.toFixed(2) + " " + y.toFixed(2) + " Td (" + pdfText(t) + ") Tj ET\n";
         }
-        var inhalt = text(20, rand, H - 58, mitStand ? "Akkorde der 1. Lage – Lernstand" : "Akkorde der 1. Lage") +
-            text(9, rand, H - 74, "Grundton gelb – hohe e-Saite oben, Sattel links", true) +
+        var inhalt = text(20, rand, H - 58, opt.titel) +
+            text(9, rand, H - 74, opt.untertitel, true) +
             text(8, rand, 28, "zufall.marcscheidegger.ch – Marc Scheidegger – CC BY-NC-SA 4.0", true);
-        if (mitStand) {
-            var gewusst = 0, geuebt = 0;
-            namen.forEach(function (n) { var e = lernstand[n]; if (e) { geuebt++; if (e.zuletzt === "ja") gewusst++; } });
-            inhalt += text(10, rand, H - 90, "Stand " + new Date().toLocaleDateString("de-CH") + ": " + gewusst + " von " +
-                namen.length + " Akkorden zuletzt gewusst · " + geuebt + " geübt");
-        }
+        if (opt.zusatz) inhalt += text(10, rand, H - 90, opt.zusatz);
         bilder.forEach(function (b, i) {
             var x = rand + b.spalte * (zelleB + abstand);
             var y = oben - (b.zeile + 1) * zelleH - b.zeile * (abstand + textZeile);
             inhalt += "q " + zelleB.toFixed(2) + " 0 0 " + zelleH.toFixed(2) + " " + x.toFixed(2) + " " + y.toFixed(2) + " cm /Im" + b.nr + " Do Q\n";
-            if (!mitStand) return;
-            var e = lernstand[namen[i]];
-            inhalt += text(8, x + 2, y - 10, e ? e.ja + "x gewusst · " + e.nein + "x nicht gewusst" : "noch nicht geübt", true);
-            if (!e) return;
-            // Haken (grün) oder Kreuz (rot) als Kreis oben rechts im Griffbild
+            if (opt.unterText) inhalt += text(8, x + 2, y - 10, opt.unterText[i], true);
+            var marke = opt.marken && opt.marken[i];
+            if (!marke) return;
+            // Haken (grün) oder Kreuz (rot) als Kreis oben rechts im Bild
             var cx = x + zelleB - 13, cy = y + zelleH - 13, r = 8, k = 0.5523 * r;
             var kreis = (cx + r) + " " + cy + " m " +
                 (cx + r) + " " + (cy + k) + " " + (cx + k) + " " + (cy + r) + " " + cx + " " + (cy + r) + " c " +
                 (cx - k) + " " + (cy + r) + " " + (cx - r) + " " + (cy + k) + " " + (cx - r) + " " + cy + " c " +
                 (cx - r) + " " + (cy - k) + " " + (cx - k) + " " + (cy - r) + " " + cx + " " + (cy - r) + " c " +
                 (cx + k) + " " + (cy - r) + " " + (cx + r) + " " + (cy - k) + " " + (cx + r) + " " + cy + " c f\n";
-            if (e.zuletzt === "ja") {
+            if (marke === "ja") {
                 inhalt += "0.36 0.79 0.42 rg " + kreis + "0.04 0.07 0.13 RG 1.8 w 1 J 1 j " +
                     (cx - 4) + " " + cy + " m " + (cx - 1) + " " + (cy - 3) + " l " + (cx + 4) + " " + (cy + 3.5) + " l S\n";
             } else {
@@ -211,7 +206,7 @@ function akkordePdf(namen, lernstand) {
         objekt(4, "<< /Length " + enc.encode(inhalt).length + " >>", inhalt);
         objekt(5, "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>");
         bilder.forEach(function (b) {
-            objekt(b.nr, "<< /Type /XObject /Subtype /Image /Width " + (bildB * 3) + " /Height " + (bildH * 3) +
+            objekt(b.nr, "<< /Type /XObject /Subtype /Image /Width " + (opt.breite * 3) + " /Height " + (opt.hoehe * 3) +
                 " /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length " + b.jpeg.byteLength + " >>", b.jpeg);
         });
 
@@ -224,18 +219,47 @@ function akkordePdf(namen, lernstand) {
     });
 }
 
-function akkordePdfHerunterladen(knopf, lernstand) {
+// PDF erzeugen und herunterladen; der Knopf zeigt solange "PDF wird erstellt …"
+function pdfHerunterladen(erzeugen, dateiname, knopf) {
     var text = knopf && knopf.textContent;
-    var mitStand = !!(lernstand && Object.keys(lernstand).length);
     if (knopf) knopf.textContent = "PDF wird erstellt …";
-    akkordePdf(null, lernstand).then(function (blob) {
+    return erzeugen().then(function (blob) {
         var a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
-        a.download = mitStand ? "Akkorde-1-Lage-Lernstand.pdf" : "Akkorde-1-Lage.pdf";
+        a.download = dateiname;
         document.body.appendChild(a);
         a.click();
         setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
     }).finally(function () { if (knopf) knopf.textContent = text; });
+}
+
+// Akkorde der 1. Lage. lernstand (optional): { "C": { ja: 3, nein: 1, zuletzt: "ja" }, … } –
+// dann zeigt das PDF pro Akkord Haken/Kreuz und Zähler sowie eine Zusammenfassung unter dem Titel.
+function akkordePdf(namen, lernstand) {
+    namen = namen || Object.keys(AKKORDE);
+    var mitStand = !!(lernstand && Object.keys(lernstand).length);
+    var opt = {
+        svgs: namen.map(akkordSvg), breite: 214, hoehe: 170, spalten: 4,
+        titel: mitStand ? "Akkorde der 1. Lage – Lernstand" : "Akkorde der 1. Lage",
+        untertitel: "Grundton gelb – hohe e-Saite oben, Sattel links"
+    };
+    if (mitStand) {
+        var gewusst = 0, geuebt = 0;
+        namen.forEach(function (n) { var e = lernstand[n]; if (e) { geuebt++; if (e.zuletzt === "ja") gewusst++; } });
+        opt.zusatz = "Stand " + new Date().toLocaleDateString("de-CH") + ": " + gewusst + " von " +
+            namen.length + " Akkorden zuletzt gewusst · " + geuebt + " geübt";
+        opt.unterText = namen.map(function (n) {
+            var e = lernstand[n];
+            return e ? e.ja + "x gewusst · " + e.nein + "x nicht gewusst" : "noch nicht geübt";
+        });
+        opt.marken = namen.map(function (n) { return lernstand[n] ? lernstand[n].zuletzt : null; });
+    }
+    return svgPdf(opt);
+}
+function akkordePdfHerunterladen(knopf, lernstand) {
+    var mitStand = !!(lernstand && Object.keys(lernstand).length);
+    return pdfHerunterladen(function () { return akkordePdf(null, lernstand); },
+        mitStand ? "Akkorde-1-Lage-Lernstand.pdf" : "Akkorde-1-Lage.pdf", knopf);
 }
 
 // Bild herunterladen, teilen (iPad/iPhone → Notiz-App) oder in die Zwischenablage kopieren.
