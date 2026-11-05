@@ -140,6 +140,14 @@ body {
 .l-gleit { background: #3fae6a; }
 #imgCaged .griff-svg svg { max-width: 420px; }
 
+/* Übersicht aller CAGED-Formen */
+.formen-steuerung { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; margin-bottom: 16px; }
+.formen-steuerung label { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; }
+.formen-steuerung select { font: inherit; padding: 6px 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); }
+.formen-steuerung .stufen, .formen-steuerung .moll-zahlen { margin: 0; }
+.formen-raster { grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); }
+#alleFormenButton { margin-left: 6px; }
+
 /* Lernstand: Gewusst ja/nein */
 .rest { font-size: .85rem; margin: 10px 0 0; }
 .rest:empty { display: none; }

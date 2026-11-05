@@ -66,6 +66,24 @@ var CAGED_FARBE = {
     linie: "#0b1220", leiter: "#ffffff", leiterText: "#0b1220", leiterRand: "#8fa8dc", papier: "#ffffff", grau: "#5a6785"
 };
 
+// Lage einer Form für einen Akkord: Fenster so tief wie möglich, aber nicht unter dem Sattel
+// (Teile unter Bund 0 werden abgeschnitten = offene Lage). Gibt { erster, bis } zurück.
+function cagedLage(grundName, formName) {
+    var f = CAGED_FORMEN[formName];
+    var schieb = (tonklasse(grundName) - f.grund + 12) % 12;
+    var von = f.von + schieb, bis = f.bis + schieb;
+    if (bis < 1) { von += 12; bis += 12; }
+    return { erster: Math.max(0, von), bis: bis };
+}
+
+// Alle Formen eines Akkords, sortiert nach Lage auf dem Griffbrett (von tief nach hoch).
+// Die F-Form fehlt hier, weil sie dieselbe Lage wie die E-Form hat.
+function cagedFormenNachLage(grundName, moll) {
+    return Object.keys(CAGED_FORMEN)
+        .filter(function (n) { return CAGED_FORMEN[n].moll === moll && n !== "F-Form"; })
+        .sort(function (a, b) { return cagedLage(grundName, a).erster - cagedLage(grundName, b).erster; });
+}
+
 // Zeichnet eine Form für einen Akkord.
 //   grundName  z. B. "F#" (ohne "m")
 //   formName   z. B. "Em-Form"
@@ -84,12 +102,8 @@ function cagedSvg(grundName, formName, optionen) {
     var modus = f.moll ? "aeolisch" : "ionisch";
     var farbeModus = MODUS_FARBE[modus], lg = LEIT_GLEIT[modus];
 
-    // Fenster verschieben: so tief wie möglich, aber nicht unter den Sattel.
-    // Teile unter Bund 0 werden abgeschnitten (offene Lage).
-    var schieb = (grund - f.grund + 12) % 12;
-    var von = f.von + schieb, bis = f.bis + schieb;
-    if (bis < 1) { von += 12; bis += 12; }
-    var erster = Math.max(0, von);             // erster gezeigter Bund (0 = leere Saiten)
+    var lage = cagedLage(grundName, formName);
+    var bis = lage.bis, erster = lage.erster;  // erster gezeigter Bund (0 = leere Saiten)
     var offen = erster === 0;
     var spalten = bis - erster + 1;            // Anzahl gezeigter Bünde (Spalte 0 = leere Saite)
 

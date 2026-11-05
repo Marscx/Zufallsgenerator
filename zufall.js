@@ -487,6 +487,8 @@ $("#cagedButtonW").on("click", function() {
     // Gewürfelten Akkord merken und Diagramm aus caged.js zeichnen (statt Bild von MarcBuch)
     $("#imgCaged").data("caged", { grund: grund, form: form, moll: moll });
     $cagedZeichnen();
+    // Ist die Übersicht offen, springt sie zur gewürfelten Tonart
+    if (!$("#alleFormen").prop("hidden")) $formenAufGewuerfelt();
 });
 // Griffbild CAGED Akkord einblenden
 $("#zeigImg2").on("click", function(){
@@ -513,6 +515,7 @@ function $cagedSvg() {
 }
 function $cagedZeichnen() {
     var c = $("#imgCaged").data("caged"), o = $cagedOptionen();
+    $formenZeichnen();                                            // Übersicht nutzt dieselben Einstellungen
     $("#cagedPenta").attr("aria-pressed", o.pentatonik ? "true" : "false");
     $("#cagedLeitGleit").attr("aria-pressed", o.leitGleit ? "true" : "false");
     $("#cagedMollZahlen").prop("checked", o.mollDurZahlen);
@@ -523,13 +526,13 @@ function $cagedDateiname() {
     var c = $("#imgCaged").data("caged");
     return "CAGED-" + c.grund.replace("#", "is") + (c.moll ? "m" : "") + "-" + c.form + ".png";
 }
-$("#cagedPenta, #cagedLeitGleit").on("click", function () {
+$("#cagedPenta, #cagedLeitGleit, #formenPenta, #formenLeitGleit").on("click", function () {
     var o = $cagedOptionen();
-    if (this.id === "cagedPenta") o.pentatonik = !o.pentatonik; else o.leitGleit = !o.leitGleit;
+    if (/Penta$/.test(this.id)) o.pentatonik = !o.pentatonik; else o.leitGleit = !o.leitGleit;
     $cagedOptionenSpeichern(o);
     $cagedZeichnen();
 });
-$("#cagedMollZahlen").on("change", function () {
+$("#cagedMollZahlen, #formenMollZahlen").on("change", function () {
     var o = $cagedOptionen();
     o.mollDurZahlen = this.checked;
     $cagedOptionenSpeichern(o);
@@ -539,6 +542,53 @@ $("#cagedSpeichern").on("click", function () { bildSpeichern($cagedSvg(), $caged
 $("#cagedKopieren").on("click", function () { bildKopieren($cagedSvg(), $cagedDateiname(), this); });
 $("#cagedTeilen").on("click", function () { bildTeilen($cagedSvg(), $cagedDateiname(), $("#cagedText").text()); });
 if (akkordTeilenMoeglich()) $("#cagedTeilen").prop("hidden", false);
+
+// ---------- Übersicht: alle Formen einer Tonart ----------
+// Vorauswahl ist der gewürfelte Akkord; die Tonart lässt sich frei wählen.
+function $formenAufGewuerfelt() {
+    var c = $("#imgCaged").data("caged");
+    if (!c) return;
+    // Seltene Namen (z. B. Fb, B#) als Auswahl ergänzen, damit der gewürfelte Name erscheint
+    if (!$("#formenGrund option").filter(function () { return this.value === c.grund; }).length) {
+        $("#formenGrund").append($("<option>").text(c.grund));
+    }
+    $("#formenGrund").val(c.grund);
+    $("#formenArt").val(c.moll ? "moll" : "dur");
+    $formenZeichnen();
+}
+function $formenZeichnen() {
+    if ($("#alleFormen").prop("hidden")) return;
+    var grund = $("#formenGrund").val(), moll = $("#formenArt").val() === "moll", o = $cagedOptionen();
+    $("#formenPenta").attr("aria-pressed", o.pentatonik ? "true" : "false");
+    $("#formenLeitGleit").attr("aria-pressed", o.leitGleit ? "true" : "false");
+    $("#formenMollZahlen").prop("checked", o.mollDurZahlen);
+    $("#formenMollZahlenFeld").prop("hidden", !moll);
+    $("#alleFormenTitel").text("Alle Formen: " + grund + (moll ? "m" : " Dur"));
+    var $raster = $("#alleFormenRaster").empty();
+    cagedFormenNachLage(grund, moll).forEach(function (form) {
+        var titel = grund + (moll ? "m" : "") + ": " + form;
+        var svg = cagedSvg(grund, form, { pentatonik: o.pentatonik, leitGleit: o.leitGleit, mollDurZahlen: o.mollDurZahlen, titel: titel });
+        var datei = "CAGED-" + grund.replace("#", "is") + (moll ? "m" : "") + "-" + form + ".png";
+        var $karte = $('<div class="alle-griff">' + svg + '<div class="alle-fuss"><button type="button" class="btn btn-ghost">Kopieren</button></div></div>');
+        $karte.find("button").attr("aria-label", titel + " in die Zwischenablage kopieren")
+            .on("click", function () { bildKopieren(svg, datei, this); });
+        $raster.append($karte);
+    });
+}
+$("#alleFormenButton").on("click", function () {
+    var $panel = $("#alleFormen"), offen = $panel.prop("hidden");
+    $panel.prop("hidden", !offen);
+    $(this).attr("aria-expanded", offen ? "true" : "false");
+    if (offen) {
+        if ($("#imgCaged").data("caged")) $formenAufGewuerfelt(); else $formenZeichnen();
+        $panel[0].scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+});
+$("#alleFormenZu").on("click", function () {
+    $("#alleFormen").prop("hidden", true);
+    $("#alleFormenButton").attr("aria-expanded", "false");
+});
+$("#formenGrund, #formenArt").on("change", $formenZeichnen);
 
 // beim drücken des Knopfes zufällige Anzeige einer Aufgaben-Karte (nie zweimal dieselbe hintereinander)
 var $letzteAufgabe = -1;
