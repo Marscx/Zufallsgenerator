@@ -107,6 +107,12 @@ body {
 .griff-aktionen .btn { font-size: .85rem; padding: 6px 14px; }
 .griff-aktionen [hidden] { display: none; }
 
+/* Notenbild der Ton-Würfel (noten.js) */
+.noten-knopf { margin-top: 4px; }
+.noten-knopf[aria-pressed="true"] { background: var(--c); border-color: var(--c); color: var(--c-ink); }
+.notenbild[hidden] { display: none; }
+.notenbild .griff-svg svg { max-width: 420px; }
+
 /* Übersicht aller Akkorde */
 .alle-akkorde {
     margin-top: 24px; background: var(--panel); border-radius: 18px; padding: 20px;

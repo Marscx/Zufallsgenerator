@@ -407,6 +407,7 @@ $("#stammButtonW").on("click", function() {
          //$text.appendTo("#stammtonW");
          $("#stTone").append($stTone[$tone[i]].name + " ");
         }
+        $notenZeichnen("st", $tone.map(function (n) { return $stTone[n].name; }));
         $tone.length = 0;
        
 });
@@ -421,8 +422,49 @@ $("#chromButtonW").on("click", function() {
         //$text.appendTo("#chromatikW");
         $("#chTone").append($chTone[$toneCh[j]].name + " ");
     }
-    console.log($toneCh);
-        $toneCh.length = 0;
+    $notenZeichnen("ch", $toneCh.map(function (n) { return $chTone[n].name; }));
+    $toneCh.length = 0;
+});
+
+// ---------- Notenbilder zu den Ton-Würfeln (noten.js) ----------
+// Knopf "Noten zeigen" blendet die gewürfelten Töne als Noten ein oder aus.
+// Ob die Noten offen sind, merkt sich der Browser je Würfel (nur auf diesem Gerät).
+var NOTEN_KEY = "wuerfel-noten-anzeige";
+function $notenEinstellung() {
+    try { return JSON.parse(localStorage.getItem(NOTEN_KEY)) || {}; } catch (e) { return {}; }
+}
+// Zeichnet die Töne ins Notenfeld des Würfels ("st" = Stammton, "ch" = Chromatik)
+function $notenZeichnen(wuerfel, toene) {
+    var feld = $("#" + wuerfel + "Noten");
+    feld.data("toene", toene);
+    feld.find(".griff-svg").html(notenSvg(toene));
+    $notenAnzeigen(wuerfel);
+}
+// Notenfeld zeigen, wenn eingeschaltet und schon gewürfelt wurde; Knopf beschriften
+function $notenAnzeigen(wuerfel) {
+    var an = !!$notenEinstellung()[wuerfel];
+    var feld = $("#" + wuerfel + "Noten");
+    feld.prop("hidden", !(an && feld.data("toene")));
+    $("#" + wuerfel + "NotenKnopf").attr("aria-pressed", an).text(an ? "Noten ausblenden" : "Noten zeigen");
+}
+["st", "ch"].forEach(function (wuerfel) {
+    var feld = $("#" + wuerfel + "Noten");
+    var datei = (wuerfel === "st" ? "Stammtoene" : "Chromatik") + "-Noten.png";
+    $("#" + wuerfel + "NotenKnopf").on("click", function () {
+        var e = $notenEinstellung();
+        e[wuerfel] = !e[wuerfel];
+        try { localStorage.setItem(NOTEN_KEY, JSON.stringify(e)); } catch (err) {}
+        $notenAnzeigen(wuerfel);
+    });
+    feld.find("[data-noten]").on("click", function () {
+        var svg = notenSvg(feld.data("toene") || []);
+        var art = this.dataset.noten;
+        if (art === "speichern") bildSpeichern(svg, datei);
+        if (art === "kopieren") bildKopieren(svg, datei, this);
+        if (art === "teilen") bildTeilen(svg, datei, "Noten");
+    });
+    if (akkordTeilenMoeglich()) feld.find('[data-noten="teilen"]').prop("hidden", false);
+    $notenAnzeigen(wuerfel);
 });
      
 // beim drücken des Knopfes zufällige Anzeige eines Akkordes der 1. Lage - Archetypen
