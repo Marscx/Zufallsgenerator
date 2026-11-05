@@ -22,7 +22,9 @@ Grundton gelb) und lassen sich als PNG speichern, kopieren oder teilen – etwa 
 Nach dem Würfeln lässt sich angeben, ob man den Griff gewusst hat; der Lernstand (Haken/Kreuz pro Akkord)
 wird nur im Browser gespeichert (localStorage) und erscheint in der Übersicht. Gewusste Akkorde (Haken) kommen beim
 Würfeln nicht mehr vor; nach einem Kreuz oder „Lernstand löschen“ sind sie wieder dabei.
-Die Bilder der CAGED-Formen liegen noch auf marcscheidegger.ch im Ordner `MarcBuch/Content/`.
+Die CAGED-Formen werden in `caged.js` für jeden gewürfelten Akkord berechnet und im richtigen Bund gezeichnet:
+Akkordtöne blau (Grundton mit Ring), zuschaltbar Pentatonik (hellblau) sowie Leitton (rot) und Gleitton (grün);
+Moll wahlweise ab Moll-Grundton (1 b3 5) oder mit Dur-Zahlen (Grundton = 6). Die Einstellungen merkt sich der Browser.
 
 ## Licence
 

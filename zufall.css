@@ -121,6 +121,25 @@ body {
 .alle-griff .btn { margin-top: 8px; font-size: .82rem; padding: 5px 12px; }
 #alleAkkordeButton { margin-left: 6px; }
 
+/* CAGED: Töne stufenweise einblenden, Legende */
+.stufen { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.stufe {
+    font: inherit; font-size: .85rem; font-weight: 600; cursor: pointer; padding: 6px 12px; border-radius: 999px;
+    background: var(--panel); color: var(--ink); border: 2px solid var(--line);
+}
+.stufe.an, .stufe[aria-pressed="true"] { background: #2f6fde; border-color: #2f6fde; color: #fff; }
+.stufe:disabled { cursor: default; }
+.moll-zahlen { display: flex; gap: 8px; align-items: center; font-size: .88rem; color: var(--muted); margin-bottom: 10px; cursor: pointer; }
+.moll-zahlen[hidden] { display: none; }
+.legende { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 10px 0 0; font-size: .8rem; color: var(--muted); }
+.legende i { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; }
+.l-grund { background: #2f6fde; box-shadow: 0 0 0 2px var(--ink); }
+.l-akkord { background: #2f6fde; }
+.l-penta { background: #9fd0f7; }
+.l-leit { background: #d9483b; }
+.l-gleit { background: #3fae6a; }
+#imgCaged .griff-svg svg { max-width: 420px; }
+
 /* Lernstand: Gewusst ja/nein */
 .rest { font-size: .85rem; margin: 10px 0 0; }
 .rest:empty { display: none; }

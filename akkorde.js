@@ -96,9 +96,12 @@ function akkordSvg(name) {
 
 // Wandelt ein Akkord-SVG in ein scharfes PNG (3-fache Auflösung) für Notiz-Apps.
 function akkordPng(name, faktor, typ) {
+    return svgBild(akkordSvg(name), faktor, typ);
+}
+// Wandelt ein beliebiges SVG (Akkord, CAGED-Form …) in ein PNG oder JPEG.
+function svgBild(svg, faktor, typ) {
     faktor = faktor || 3;
     return new Promise(function (fertig, fehler) {
-        var svg = akkordSvg(name);
         var bild = new Image();
         bild.onload = function () {
             var c = document.createElement("canvas");
@@ -235,12 +238,13 @@ function akkordePdfHerunterladen(knopf, lernstand) {
     }).finally(function () { if (knopf) knopf.textContent = text; });
 }
 
-// Bild herunterladen, teilen (iPad/iPhone → Notiz-App) oder in die Zwischenablage kopieren
-function akkordSpeichern(name) {
-    akkordPng(name).then(function (blob) {
+// Bild herunterladen, teilen (iPad/iPhone → Notiz-App) oder in die Zwischenablage kopieren.
+// Die bild…-Funktionen arbeiten mit jedem SVG, die akkord…-Funktionen mit einem Akkordnamen.
+function bildSpeichern(svg, dateiname) {
+    svgBild(svg).then(function (blob) {
         var a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
-        a.download = "Akkord-" + name + ".png";
+        a.download = dateiname;
         document.body.appendChild(a);
         a.click();
         setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
@@ -249,13 +253,13 @@ function akkordSpeichern(name) {
 function akkordTeilenMoeglich() {
     return !!(navigator.canShare && navigator.canShare({ files: [new File([""], "x.png", { type: "image/png" })] }));
 }
-function akkordTeilen(name) {
-    akkordPng(name).then(function (blob) {
-        var datei = new File([blob], "Akkord-" + name + ".png", { type: "image/png" });
-        return navigator.share({ files: [datei], title: "Akkord " + name });
+function bildTeilen(svg, dateiname, titel) {
+    svgBild(svg).then(function (blob) {
+        var datei = new File([blob], dateiname, { type: "image/png" });
+        return navigator.share({ files: [datei], title: titel });
     }).catch(function () { /* Teilen abgebrochen */ });
 }
-function akkordKopieren(name, knopf) {
+function bildKopieren(svg, dateiname, knopf) {
     // Kurze Rückmeldung im Knopf, danach wieder der ursprüngliche Text
     function melden(text) {
         if (!knopf) return;
@@ -265,10 +269,13 @@ function akkordKopieren(name, knopf) {
         setTimeout(function () { knopf.textContent = alt; }, 1800);
     }
     // Ohne Zugriff auf die Zwischenablage wird das Bild stattdessen heruntergeladen
-    function ersatz() { akkordSpeichern(name); melden("Gespeichert ⬇"); }
+    function ersatz() { bildSpeichern(svg, dateiname); melden("Gespeichert ⬇"); }
     if (!navigator.clipboard || !window.ClipboardItem) { ersatz(); return; }
     // Safari verlangt, dass das Bild als Promise übergeben wird
-    navigator.clipboard.write([new ClipboardItem({ "image/png": akkordPng(name) })])
+    navigator.clipboard.write([new ClipboardItem({ "image/png": svgBild(svg) })])
         .then(function () { melden("Kopiert ✓"); })
         .catch(ersatz);
 }
+function akkordSpeichern(name) { bildSpeichern(akkordSvg(name), "Akkord-" + name + ".png"); }
+function akkordTeilen(name) { bildTeilen(akkordSvg(name), "Akkord-" + name + ".png", "Akkord " + name); }
+function akkordKopieren(name, knopf) { bildKopieren(akkordSvg(name), "Akkord-" + name + ".png", knopf); }

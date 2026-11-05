@@ -473,47 +473,72 @@ $("#griffSpeichern").on("click", function () { akkordSpeichern($("#imgAkk").data
 $("#griffKopieren").on("click", function () { akkordKopieren($("#imgAkk").data("akkord"), this); });
 $("#griffTeilen").on("click", function () { akkordTeilen($("#imgAkk").data("akkord")); });
 if (akkordTeilenMoeglich()) $("#griffTeilen").prop("hidden", false);
-// beim drücken des Kopfes zufällige Anzeige eines Chromatischen Akkords Dur Moll 7 maj7 m7b5
-var $tonleiterTon = [];
-var $vorZ = [];
-var $akkordArt = [];
-var $akkFormD = [];
-var $akkFormM = [];
-var m = 0;
+// CAGED-Würfel: zufälliger Grundton (mit #, b oder ohne), Dur oder Moll und eine passende Form
 
 $("#cagedButtonW").on("click", function() {
     $("#cagedText").empty();
     $("#imgCaged").hide();
-    for (m = 0; m < 1; m++) {
-        $tonleiterTon.push(Math.floor(Math.random()*$tonleiter.length));
-        $vorZ.push(Math.floor(Math.random()*$vorzeichen.length));
-        $akkordArt.push(Math.floor(Math.random()*$akkArt.length));
-    
-        if ($akkArt[$akkordArt[m]].name === "m") {
-            $akkFormM.push(Math.floor(Math.random()*$akkFormMoll.length));
-            $("#cagedText").append($tonleiter[$tonleiterTon[m]].name + $vorzeichen[$vorZ[m]].name + $akkArt[$akkordArt[m]].name + ": " + $akkFormMoll[$akkFormM[m]].name);
-            $("#imgCaged").attr("src", $akkFormMoll[$akkFormM[m]].url);    
-            } else {
-            $akkFormD.push(Math.floor(Math.random()*$akkFormDur.length));
-            $("#cagedText").append($tonleiter[$tonleiterTon[m]].name + $vorzeichen[$vorZ[m]].name + $akkArt[$akkordArt[m]].name + ": " + $akkFormDur[$akkFormD[m]].name);
-            $("#imgCaged").attr("src", $akkFormDur[$akkFormD[m]].url);
-        }
-    }
-    console.log($tonleiterTon);
-    console.log($vorZ);
-    console.log($akkordArt);
-    console.log($akkFormD);
-    console.log($akkFormM)
-    $tonleiterTon.length = 0;
-    $vorZ.length = 0;
-    $akkordArt.length = 0;
-    $akkFormD.length = 0;
-    $akkFormM.length = 0;
+    var grund = $tonleiter[Math.floor(Math.random() * $tonleiter.length)].name +
+                $vorzeichen[Math.floor(Math.random() * $vorzeichen.length)].name;
+    var moll = $akkArt[Math.floor(Math.random() * $akkArt.length)].name === "m";
+    var formen = moll ? $akkFormMoll : $akkFormDur;
+    var form = formen[Math.floor(Math.random() * formen.length)].name;
+    $("#cagedText").text(grund + (moll ? "m" : "") + ": " + form);
+    // Gewürfelten Akkord merken und Diagramm aus caged.js zeichnen (statt Bild von MarcBuch)
+    $("#imgCaged").data("caged", { grund: grund, form: form, moll: moll });
+    $cagedZeichnen();
 });
 // Griffbild CAGED Akkord einblenden
 $("#zeigImg2").on("click", function(){
-    $("#imgCaged").fadeIn(1000);
+    if ($("#imgCaged").data("caged")) $("#imgCaged").fadeIn(600);
 });
+
+// ---------- CAGED-Diagramm: Stufen, Moll-Zahlen, Export ----------
+// Einstellungen (Pentatonik, Leit-/Gleitton, Moll-Zahlen) merkt sich der Browser
+var CAGED_KEY = "wuerfel-caged-anzeige";
+function $cagedOptionen() {
+    var o = {};
+    try { o = JSON.parse(localStorage.getItem(CAGED_KEY)) || {}; } catch (e) {}
+    return { pentatonik: !!o.pentatonik, leitGleit: !!o.leitGleit, mollDurZahlen: !!o.mollDurZahlen };
+}
+function $cagedOptionenSpeichern(o) {
+    try { localStorage.setItem(CAGED_KEY, JSON.stringify(o)); } catch (e) {}
+}
+function $cagedSvg() {
+    var c = $("#imgCaged").data("caged");
+    if (!c) return "";
+    var o = $cagedOptionen();
+    o.titel = c.grund + (c.moll ? "m" : "") + ": " + c.form;
+    return cagedSvg(c.grund, c.form, o);
+}
+function $cagedZeichnen() {
+    var c = $("#imgCaged").data("caged"), o = $cagedOptionen();
+    $("#cagedPenta").attr("aria-pressed", o.pentatonik ? "true" : "false");
+    $("#cagedLeitGleit").attr("aria-pressed", o.leitGleit ? "true" : "false");
+    $("#cagedMollZahlen").prop("checked", o.mollDurZahlen);
+    $("#cagedMollZahlenFeld").prop("hidden", !(c && c.moll));     // nur bei Moll-Akkorden
+    $("#imgCaged .griff-svg").html($cagedSvg());
+}
+function $cagedDateiname() {
+    var c = $("#imgCaged").data("caged");
+    return "CAGED-" + c.grund.replace("#", "is") + (c.moll ? "m" : "") + "-" + c.form + ".png";
+}
+$("#cagedPenta, #cagedLeitGleit").on("click", function () {
+    var o = $cagedOptionen();
+    if (this.id === "cagedPenta") o.pentatonik = !o.pentatonik; else o.leitGleit = !o.leitGleit;
+    $cagedOptionenSpeichern(o);
+    $cagedZeichnen();
+});
+$("#cagedMollZahlen").on("change", function () {
+    var o = $cagedOptionen();
+    o.mollDurZahlen = this.checked;
+    $cagedOptionenSpeichern(o);
+    $cagedZeichnen();
+});
+$("#cagedSpeichern").on("click", function () { bildSpeichern($cagedSvg(), $cagedDateiname()); });
+$("#cagedKopieren").on("click", function () { bildKopieren($cagedSvg(), $cagedDateiname(), this); });
+$("#cagedTeilen").on("click", function () { bildTeilen($cagedSvg(), $cagedDateiname(), $("#cagedText").text()); });
+if (akkordTeilenMoeglich()) $("#cagedTeilen").prop("hidden", false);
 
 // beim drücken des Knopfes zufällige Anzeige einer Aufgaben-Karte (nie zweimal dieselbe hintereinander)
 var $letzteAufgabe = -1;
