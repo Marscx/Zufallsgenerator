@@ -27,8 +27,8 @@ Akkordtöne blau (Grundton mit Ring), zuschaltbar Pentatonik (hellblau) sowie Le
 Moll wahlweise ab Moll-Grundton (1 b3 5) oder mit Dur-Zahlen (Grundton = 6). Die Einstellungen merkt sich der Browser.
 „Alle Formen“ zeigt alle Formen einer Tonart nach Lage sortiert (Vorauswahl: der gewürfelte Akkord);
 jede Form lässt sich kopieren oder als PNG speichern, alle zusammen als A4-PDF.
-Beim Stammton- und Chromatik-Würfel blendet „Noten zeigen“ die gewürfelten Töne als Noten ein (`noten.js`):
-Violinschlüssel mit kleiner 8, wie in der Gitarrenliteratur eine Oktave höher notiert, zwei Zeilen à 5 ganze Noten
+Stammton- und Chromatik-Würfel ziehen je 5 Töne, „Noten zeigen“ blendet sie als Noten ein (`noten.js`):
+Violinschlüssel mit kleiner 8, wie in der Gitarrenliteratur eine Oktave höher notiert, eine Zeile mit 5 ganzen Noten
 mit Hilfslinien und Vorzeichen. Das Notenbild lässt sich kopieren oder als PNG speichern. Der Violinschlüssel stammt
 aus der gemeinfreien Datei „GClef.svg“ von Wikimedia Commons.
 

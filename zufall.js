@@ -396,13 +396,13 @@ var $aufgaben = [
     {   name: "Essen" },
     {   name: "Eine Geschichte erzählen" }
 ];
-// beim drücke des Knopfes: Zufällige Auswahl eines von 10 Stammtones
+// beim drücke des Knopfes: Zufällige Auswahl von 5 Stammtönen
 
 var $tone = [];
 //var $text = $("<h4>");
 $("#stammButtonW").on("click", function() {
     $("#stTone").empty();
-    for (var i = 0; i < 10; i++) {
+    for (var i = 0; i < 5; i++) {
        $tone.push(Math.floor(Math.random()*$stTone.length));
          //$text.appendTo("#stammtonW");
          $("#stTone").append($stTone[$tone[i]].name + " ");
@@ -412,12 +412,12 @@ $("#stammButtonW").on("click", function() {
        
 });
 
-// beim drücken des Knopfes Zufällige Anzeige 10 Chromatischer Töne
+// beim drücken des Knopfes Zufällige Anzeige 5 chromatischer Töne
 var $toneCh = [];
 
 $("#chromButtonW").on("click", function() {
     $("#chTone").empty();
-    for (var j = 0; j < 10; j++) {
+    for (var j = 0; j < 5; j++) {
         $toneCh.push(Math.floor(Math.random()*$chTone.length));
         //$text.appendTo("#chromatikW");
         $("#chTone").append($chTone[$toneCh[j]].name + " ");
