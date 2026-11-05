@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="de">
+    <head>
+        <meta charset="utf-8">
+        <title>CAGED-Diagramme (Entwurf) – Marc Scheidegger</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noindex">
+        <link rel="icon" href="favicon.svg" type="image/svg+xml">
+        <link rel="stylesheet" href="marke.css?v=2">
+        <link rel="stylesheet" href="zufall.css?v=6">
+        <style>
+            /* Nur für diese Entwurfsseite */
+            .steuerung { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center; margin: 0 0 20px; }
+            .steuerung label { display: inline-flex; gap: 8px; align-items: center; font-weight: 600; }
+            .steuerung select { font: inherit; padding: 6px 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); }
+            .bogen { display: grid; gap: 18px; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+            .bogen svg, .vergleich svg { display: block; width: 100%; height: auto; border-radius: 14px; box-shadow: inset 0 0 0 1px var(--line); }
+            .vergleich { display: grid; gap: 14px 18px; grid-template-columns: 1fr 1fr; align-items: center; }
+            .vergleich img { width: 100%; background: #fff; border-radius: 10px; }
+            h2 { margin: 32px 0 12px; }
+        </style>
+    </head>
+    <body>
+        <main class="screen">
+            <div class="tool-head">
+                <span class="kicker">Entwurf</span>
+                <h1>CAGED-Formen</h1>
+                <p class="hint">Die Formen werden für jede Tonart berechnet und im richtigen Bund gezeigt. Grundton gelb, Akkordtöne dunkel, Tonleitertöne hell.</p>
+            </div>
+
+            <div class="steuerung">
+                <label>Grundton
+                    <select id="grund">
+                        <option>C</option><option>C#</option><option>Db</option><option>D</option><option>Eb</option>
+                        <option>E</option><option selected>F#</option><option>F</option><option>Gb</option><option>G</option>
+                        <option>Ab</option><option>A</option><option>Bb</option><option>B</option>
+                    </select>
+                </label>
+                <label>Akkord
+                    <select id="art"><option value="">Dur</option><option value="m">Moll</option></select>
+                </label>
+                <label><input type="checkbox" id="tonleiter"> Tonleiter zeigen</label>
+                <label><input type="checkbox" id="durzahlen"> Moll mit Dur-Zahlen (Grundton = 6)</label>
+            </div>
+            <div class="bogen" id="bogen"></div>
+
+            <h2>Vergleich: neue Diagramme und bisherige Bilder</h2>
+            <p class="hint">Jede Form zwei Bünde höher als in ihrer eigenen Tonart (damit die ganze Form zu sehen ist), mit Tonleiter. Links neu, rechts bisher.</p>
+            <div class="vergleich" id="vergleich"></div>
+        </main>
+
+        <script src="caged.js?v=2"></script>
+        <script>
+            var ALT = {
+                "C-Form": "8DAE3791-8E2F-452F-A4A7-125CA0126917", "A-Form": "B9AE24B1-ED9E-4A40-9394-4B8E4BF6140E",
+                "G-Form": "E019C07D-EAF7-4EB7-A5A1-9BD37E83C2EC", "E-Form": "0B6DA3ED-2C5B-4F8F-9070-8E2122A4DF5B",
+                "D-Form": "02C4E3EE-7A50-4413-BF2A-7E83EA162EB8", "Am-Form": "09C63466-026C-4471-BBA9-4FE60CCBEE85",
+                "Em-Form": "6720C5C5-237B-4CE8-93E9-5F04DC25CBB2", "Dm-Form": "E2C97907-5AD2-45A3-9CBC-3A52C5673D7D"
+            };
+            // Zwei Bünde höher als die eigene Tonart, damit die ganze Form (ohne Sattel) sichtbar ist
+            var EIGEN = { "C-Form": "D", "A-Form": "B", "G-Form": "A", "E-Form": "F#", "D-Form": "E", "Am-Form": "B", "Em-Form": "F#", "Dm-Form": "E" };
+
+            function zeichnen() {
+                var grund = document.getElementById("grund").value, art = document.getElementById("art").value;
+                var opt = { tonleiter: document.getElementById("tonleiter").checked, mollDurZahlen: document.getElementById("durzahlen").checked };
+                document.getElementById("bogen").innerHTML = Object.keys(CAGED_FORMEN)
+                    .filter(function (n) { return CAGED_FORMEN[n].moll === (art === "m"); })
+                    .map(function (n) { return '<div>' + cagedSvg(grund, n, opt) + '</div>'; }).join("");
+                document.getElementById("vergleich").innerHTML = Object.keys(ALT).map(function (n) {
+                    return '<div>' + cagedSvg(EIGEN[n], n, { tonleiter: true, mollDurZahlen: opt.mollDurZahlen }) + '</div>' +
+                        '<img src="https://marcscheidegger.ch/MarcBuch/Content/' + ALT[n] + '.png" alt="bisheriges Bild ' + n + '">';
+                }).join("");
+            }
+            ["grund", "art", "tonleiter", "durzahlen"].forEach(function (id) { document.getElementById(id).addEventListener("change", zeichnen); });
+            zeichnen();
+        </script>
+    </body>
+</html>
