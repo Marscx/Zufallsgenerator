@@ -53,6 +53,8 @@ var MODUS_FARBE = {
 };
 var LEITTON_FARBE = { fuell: "#d9483b", text: "#ffffff" };
 var GLEITTON_FARBE = { fuell: "#3fae6a", text: "#ffffff" };
+// Pentatonik-Töne, die nicht zum Akkord gehören: hellblau
+var PENTA_FARBE = { fuell: "#9fd0f7", text: "#0b1220" };
 // Leitton und Gleitton als Halbtonabstand vom Akkordgrundton.
 // Gezählt wie in der Dur-Tonleiter: Leitton = 7 (Halbton unter der 1), Gleitton = 4 (Halbton über der 3).
 // In Äolisch entspricht das den Tönen 2 (→ b3) und b6 (→ 5), also Stufe 7 und 4 der parallelen Dur-Tonleiter.
@@ -67,7 +69,11 @@ var CAGED_FARBE = {
 // Zeichnet eine Form für einen Akkord.
 //   grundName  z. B. "F#" (ohne "m")
 //   formName   z. B. "Em-Form"
-//   optionen   { tonleiter: true/false, mollDurZahlen: true/false, titel: "F#m: Em-Form" }
+//   optionen   { pentatonik: true/false, leitGleit: true/false, mollDurZahlen: true/false, titel: "F#m: Em-Form" }
+//
+// Die Tonleiter wird in Stufen aufgebaut, damit man die Zusammenhänge zeigen kann:
+//   Akkordtöne (immer)  +  Pentatonik (2 Töne, hellblau)  +  Leit- und Gleitton (rot / grün)
+//   = alle 7 Töne der Tonleiter (ionisch bzw. äolisch)
 function cagedSvg(grundName, formName, optionen) {
     optionen = optionen || {};
     var f = CAGED_FORMEN[formName];
@@ -130,11 +136,14 @@ function cagedSvg(grundName, formName, optionen) {
             for (var k = 0; k < stufen.length; k++) if (stufen[k][0] === abstand) stufe = stufen[k][1];
             if (stufe === null) continue;
             var istAkkord = akkordStufen.indexOf(abstand) >= 0;
-            if (!istAkkord && !optionen.tonleiter) continue;
+            var istLeit = abstand === lg.leit, istGleit = abstand === lg.gleit;
+            var istPenta = !istAkkord && !istLeit && !istGleit;   // die übrigen 2 Töne = Pentatonik
+            if (istPenta && !optionen.pentatonik) continue;
+            if ((istLeit || istGleit) && !optionen.leitGleit) continue;
             var cx = bundX(bund);
             var istGrund = abstand === 0;
             var r = istAkkord ? 10 : 8.5;
-            var farbe = istAkkord ? farbeModus : (abstand === lg.leit ? LEITTON_FARBE : (abstand === lg.gleit ? GLEITTON_FARBE : null));
+            var farbe = istAkkord ? farbeModus : (istLeit ? LEITTON_FARBE : (istGleit ? GLEITTON_FARBE : PENTA_FARBE));
             var fuellung = farbe ? farbe.fuell : CAGED_FARBE.leiter;
             var textfarbe = farbe ? farbe.text : CAGED_FARBE.leiterText;
             var rand = istGrund ? CAGED_FARBE.linie : (farbe ? farbe.fuell : CAGED_FARBE.leiterRand);
