@@ -139,14 +139,23 @@ function pdfText(text) {
     });
 }
 
-// Erstellt ein A4-PDF aus mehreren SVG-Diagrammen gleicher Grösse.
-//   opt.svgs       Liste der SVG-Texte
-//   opt.breite/hoehe  Grösse eines SVG (Pixel), opt.spalten  Anzahl Spalten
-//   opt.titel, opt.untertitel, opt.zusatz (optionale dritte Zeile)
-//   opt.unterText  optionale Liste: kleiner Text unter jedem Bild
-//   opt.marken     optionale Liste: "ja" (Haken) / "nein" (Kreuz) / null oben rechts im Bild
+// Erstellt ein A4-PDF aus SVG-Diagrammen, auf einer oder mehreren Seiten.
+//   opt.seiten     Liste von Seiten (sonst ist opt selbst die einzige Seite), je Seite:
+//     svgs         Liste der SVG-Texte – jedes Bild behält sein eigenes Seitenverhältnis
+//     spalten      Anzahl Spalten
+//     titel, untertitel, zusatz (optionale dritte Zeile)
+//     unterText    optionale Liste: kleiner Text unter jedem Bild
+//     marken       optionale Liste: "ja" (Haken) / "nein" (Kreuz) / null oben rechts im Bild
 function svgPdf(opt) {
-    return Promise.all(opt.svgs.map(function (svg) {
+    var seiten = opt.seiten || [opt];
+    // Grösse eines SVG aus seinen Attributen width/height
+    function groesse(svg) {
+        var w = /width="([\d.]+)"/.exec(svg), h = /height="([\d.]+)"/.exec(svg);
+        return { w: w ? parseFloat(w[1]) : 300, h: h ? parseFloat(h[1]) : 200 };
+    }
+    var alle = [];
+    seiten.forEach(function (s) { s.svgs.forEach(function (svg) { alle.push(svg); }); });
+    return Promise.all(alle.map(function (svg) {
         return svgBild(svg, 3, "image/jpeg").then(function (b) { return b.arrayBuffer(); });
     })).then(function (jpegs) {
         var enc = new TextEncoder();
@@ -161,64 +170,77 @@ function svgPdf(opt) {
             if (strom !== undefined) { schreib("stream\n"); schreib(strom); schreib("\nendstream\n"); }
             schreib("endobj\n");
         }
-
-        // Seite A4 in Punkt (1/72 Zoll)
-        var W = 595.28, H = 841.89, rand = 40, spalten = opt.spalten, abstand = 12;
-        var zelleB = (W - 2 * rand - (spalten - 1) * abstand) / spalten;
-        var zelleH = zelleB * opt.hoehe / opt.breite;
-        var oben = H - (opt.zusatz ? 106 : 92);             // Platz für Titel (und Zusatzzeile)
-        var textZeile = opt.unterText ? 14 : 0;             // Platz unter jedem Bild für Text
-
-        var bilder = jpegs.map(function (jpeg, i) {
-            return { nr: 6 + i, jpeg: jpeg, spalte: i % spalten, zeile: Math.floor(i / spalten) };
-        });
         function text(groesse, x, y, t, grau) {
             return (grau ? "0.35 0.40 0.52 rg " : "0.04 0.07 0.13 rg ") +
                 "BT /F1 " + groesse + " Tf " + x.toFixed(2) + " " + y.toFixed(2) + " Td (" + pdfText(t) + ") Tj ET\n";
         }
-        var inhalt = text(20, rand, H - 58, opt.titel) +
-            text(9, rand, H - 74, opt.untertitel, true) +
-            text(8, rand, 28, "zufall.marcscheidegger.ch – Marc Scheidegger – CC BY-NC-SA 4.0", true);
-        if (opt.zusatz) inhalt += text(10, rand, H - 90, opt.zusatz);
-        bilder.forEach(function (b, i) {
-            var x = rand + b.spalte * (zelleB + abstand);
-            var y = oben - (b.zeile + 1) * zelleH - b.zeile * (abstand + textZeile);
-            inhalt += "q " + zelleB.toFixed(2) + " 0 0 " + zelleH.toFixed(2) + " " + x.toFixed(2) + " " + y.toFixed(2) + " cm /Im" + b.nr + " Do Q\n";
-            if (opt.unterText) inhalt += text(8, x + 2, y - 10, opt.unterText[i], true);
-            var marke = opt.marken && opt.marken[i];
-            if (!marke) return;
-            // Haken (grün) oder Kreuz (rot) als Kreis oben rechts im Bild
-            var cx = x + zelleB - 13, cy = y + zelleH - 13, r = 8, k = 0.5523 * r;
-            var kreis = (cx + r) + " " + cy + " m " +
-                (cx + r) + " " + (cy + k) + " " + (cx + k) + " " + (cy + r) + " " + cx + " " + (cy + r) + " c " +
-                (cx - k) + " " + (cy + r) + " " + (cx - r) + " " + (cy + k) + " " + (cx - r) + " " + cy + " c " +
-                (cx - r) + " " + (cy - k) + " " + (cx - k) + " " + (cy - r) + " " + cx + " " + (cy - r) + " c " +
-                (cx + k) + " " + (cy - r) + " " + (cx + r) + " " + (cy - k) + " " + (cx + r) + " " + cy + " c f\n";
-            if (marke === "ja") {
-                inhalt += "0.36 0.79 0.42 rg " + kreis + "0.04 0.07 0.13 RG 1.8 w 1 J 1 j " +
-                    (cx - 4) + " " + cy + " m " + (cx - 1) + " " + (cy - 3) + " l " + (cx + 4) + " " + (cy + 3.5) + " l S\n";
-            } else {
-                inhalt += "0.85 0.15 0.17 rg " + kreis + "1 1 1 RG 1.8 w 1 J " +
-                    (cx - 3) + " " + (cy - 3) + " m " + (cx + 3) + " " + (cy + 3) + " l " +
-                    (cx - 3) + " " + (cy + 3) + " m " + (cx + 3) + " " + (cy - 3) + " l S\n";
+
+        // Seite A4 in Punkt (1/72 Zoll)
+        var W = 595.28, H = 841.89, rand = 40, abstand = 12;
+        // Objektnummern: 1 Katalog, 2 Seitenliste, 3 Schrift, dann je Seite: Seite + Inhalt, danach die Bilder
+        var nrBild = 4 + 2 * seiten.length, bildNr = 0, bilder = [];
+        var seitenDaten = seiten.map(function (s, si) {
+            var spalten = s.spalten || 1;
+            var zelleB = (W - 2 * rand - (spalten - 1) * abstand) / spalten;
+            var oben = H - (s.zusatz ? 106 : 92);               // Platz für Titel (und Zusatzzeile)
+            var textZeile = s.unterText ? 14 : 0;               // Platz unter jedem Bild für Text
+            var inhalt = text(20, rand, H - 58, s.titel || "") +
+                text(9, rand, H - 74, s.untertitel || "", true) +
+                text(8, rand, 28, "zufall.marcscheidegger.ch – Marc Scheidegger – CC BY-NC-SA 4.0", true);
+            if (s.zusatz) inhalt += text(10, rand, H - 90, s.zusatz);
+            var namen = [], y0 = oben;
+            for (var start = 0; start < s.svgs.length; start += spalten) {
+                // eine Zeile: Höhe = höchstes Bild der Zeile
+                var zeile = s.svgs.slice(start, start + spalten).map(groesse);
+                var zeilenH = Math.max.apply(null, zeile.map(function (g) { return zelleB * g.h / g.w; }));
+                zeile.forEach(function (g, j) {
+                    var i = start + j, nr = nrBild + bildNr;
+                    var bh = zelleB * g.h / g.w;
+                    var x = rand + j * (zelleB + abstand), y = y0 - bh;
+                    bilder.push({ nr: nr, jpeg: jpegs[bildNr], w: g.w, h: g.h });
+                    namen.push("/Im" + nr + " " + nr + " 0 R");
+                    bildNr++;
+                    inhalt += "q " + zelleB.toFixed(2) + " 0 0 " + bh.toFixed(2) + " " + x.toFixed(2) + " " + y.toFixed(2) + " cm /Im" + nr + " Do Q\n";
+                    if (s.unterText) inhalt += text(8, x + 2, y - 10, s.unterText[i], true);
+                    var marke = s.marken && s.marken[i];
+                    if (!marke) return;
+                    // Haken (grün) oder Kreuz (rot) als Kreis oben rechts im Bild
+                    var cx = x + zelleB - 13, cy = y + bh - 13, r = 8, k = 0.5523 * r;
+                    var kreis = (cx + r) + " " + cy + " m " +
+                        (cx + r) + " " + (cy + k) + " " + (cx + k) + " " + (cy + r) + " " + cx + " " + (cy + r) + " c " +
+                        (cx - k) + " " + (cy + r) + " " + (cx - r) + " " + (cy + k) + " " + (cx - r) + " " + cy + " c " +
+                        (cx - r) + " " + (cy - k) + " " + (cx - k) + " " + (cy - r) + " " + cx + " " + (cy - r) + " c " +
+                        (cx + k) + " " + (cy - r) + " " + (cx + r) + " " + (cy - k) + " " + (cx + r) + " " + cy + " c f\n";
+                    if (marke === "ja") {
+                        inhalt += "0.36 0.79 0.42 rg " + kreis + "0.04 0.07 0.13 RG 1.8 w 1 J 1 j " +
+                            (cx - 4) + " " + cy + " m " + (cx - 1) + " " + (cy - 3) + " l " + (cx + 4) + " " + (cy + 3.5) + " l S\n";
+                    } else {
+                        inhalt += "0.85 0.15 0.17 rg " + kreis + "1 1 1 RG 1.8 w 1 J " +
+                            (cx - 3) + " " + (cy - 3) + " m " + (cx + 3) + " " + (cy + 3) + " l " +
+                            (cx - 3) + " " + (cy + 3) + " m " + (cx + 3) + " " + (cy - 3) + " l S\n";
+                    }
+                });
+                y0 -= zeilenH + abstand + textZeile;
             }
+            return { seite: 4 + 2 * si, inhalt: 5 + 2 * si, text: inhalt, namen: namen };
         });
 
         schreib("%PDF-1.4\n%âãÏÓ\n");
         objekt(1, "<< /Type /Catalog /Pages 2 0 R >>");
-        objekt(2, "<< /Type /Pages /Kids [3 0 R] /Count 1 >>");
-        var xobj = bilder.map(function (b) { return "/Im" + b.nr + " " + b.nr + " 0 R"; }).join(" ");
-        objekt(3, "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 " + W + " " + H + "] /Contents 4 0 R " +
-            "/Resources << /Font << /F1 5 0 R >> /XObject << " + xobj + " >> >> >>");
-        objekt(4, "<< /Length " + enc.encode(inhalt).length + " >>", inhalt);
-        objekt(5, "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>");
+        objekt(2, "<< /Type /Pages /Kids [" + seitenDaten.map(function (d) { return d.seite + " 0 R"; }).join(" ") + "] /Count " + seitenDaten.length + " >>");
+        objekt(3, "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>");
+        seitenDaten.forEach(function (d) {
+            objekt(d.seite, "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 " + W + " " + H + "] /Contents " + d.inhalt + " 0 R " +
+                "/Resources << /Font << /F1 3 0 R >> /XObject << " + d.namen.join(" ") + " >> >> >>");
+            objekt(d.inhalt, "<< /Length " + enc.encode(d.text).length + " >>", d.text);
+        });
         bilder.forEach(function (b) {
-            objekt(b.nr, "<< /Type /XObject /Subtype /Image /Width " + (opt.breite * 3) + " /Height " + (opt.hoehe * 3) +
+            objekt(b.nr, "<< /Type /XObject /Subtype /Image /Width " + Math.round(b.w * 3) + " /Height " + Math.round(b.h * 3) +
                 " /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length " + b.jpeg.byteLength + " >>", b.jpeg);
         });
 
         // Verzeichnis (xref) mit den Positionen aller Objekte
-        var anzahl = 6 + bilder.length, xref = laenge;
+        var anzahl = nrBild + bilder.length, xref = laenge;
         var x = "xref\n0 " + anzahl + "\n0000000000 65535 f \n";
         for (var i = 1; i < anzahl; i++) x += String(offsets[i]).padStart(10, "0") + " 00000 n \n";
         schreib(x + "trailer\n<< /Size " + anzahl + " /Root 1 0 R >>\nstartxref\n" + xref + "\n%%EOF\n");
