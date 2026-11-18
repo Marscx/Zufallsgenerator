@@ -103,26 +103,34 @@ function cagedVerbundenFenster(grundName, formen, tiefer) {
     return ok ? { erster: Math.max(0, von), bis: bis } : null;
 }
 
-// Fingersatz mit Finger 1 und 3: pro Saite genau zwei Töne der Pentatonik im Ganztonabstand
+// Fingersatz mit Finger 1 und 3: pro Saite zwei Töne der Pentatonik im Ganztonabstand
 // (2 Bünde), von der tiefen E-Saite zur hohen e-Saite diagonal das Griffbrett hinauf –
 // auf jeder Saite das tiefste passende Paar, das nicht tiefer liegt als auf der Saite davor.
-// Gibt { "saite-bund": true, … } zurück oder null, wenn es im Fenster nicht aufgeht.
+// Beginnt das Paar mit 1–2 (Moll: b3–4), kommt der dritte Ton der Ganztonkette dazu:
+// die Terz (Moll: die 5), zwei Bünde höher – Finger 3 rutscht hinauf. So fehlt kein Ton der Pentatonik.
+// Gibt { tone: { "saite-bund": true, … }, bis: höchster Bund } zurück oder null.
 function cagedPfad(grundName, moll, fenster) {
     var grund = tonklasse(grundName);
     var penta = moll ? [0, 3, 5, 7, 10] : [0, 2, 4, 7, 9];
-    function inPenta(i, bund) { return penta.indexOf((SAITEN[i] + bund - grund + 120) % 12) >= 0; }
-    var tone = {}, vorher = fenster.erster;
+    var kette = moll ? 3 : 0;                     // Anfang der Kette 1–2–3 bzw. b3–4–5
+    function abstand(i, bund) { return (SAITEN[i] + bund - grund + 120) % 12; }
+    function inPenta(i, bund) { return penta.indexOf(abstand(i, bund)) >= 0; }
+    var tone = {}, vorher = fenster.erster, hoechster = fenster.bis;
     for (var i = 0; i < 6; i++) {
         var gefunden = false;
         for (var b = vorher; b + 2 <= fenster.bis; b++) {
             if (inPenta(i, b) && inPenta(i, b + 2)) {
                 tone[i + "-" + b] = tone[i + "-" + (b + 2)] = true;
+                if (abstand(i, b) === kette) {    // Terz (bzw. 5) dazu, Finger 3 rutscht
+                    tone[i + "-" + (b + 4)] = true;
+                    hoechster = Math.max(hoechster, b + 4);
+                }
                 vorher = b; gefunden = true; break;
             }
         }
         if (!gefunden) return null;
     }
-    return tone;
+    return { tone: tone, bis: hoechster };
 }
 
 // Lage und Töne eines verbundenen Fingersatzes: tiefere Oktave, wenn der Fingersatz dort
@@ -135,8 +143,8 @@ function cagedVerbunden(grundName, moll, formen) {
         for (var v = 0; v < varianten.length; v++) {
             if (!varianten[v]) continue;
             var f = { erster: varianten[v].erster, bis: varianten[v].bis + extra };
-            var tone = cagedPfad(grundName, moll, f);
-            if (tone) return { fenster: f, tone: tone };
+            var pfad = cagedPfad(grundName, moll, f);
+            if (pfad) return { fenster: { erster: f.erster, bis: Math.max(f.bis, pfad.bis) }, tone: pfad.tone };
         }
     }
     return null;

@@ -610,7 +610,7 @@ function $formenDiagramme(grund, moll, o) {
         var titel = cagedVerbundenTitel(grund, moll, formen);
         liste.push({ titel: titel, datei: formen.map(function (n) { return n.replace("-Form", ""); }).join("-") + "-verbunden", verbunden: true,
             svg: cagedSvg(grund, formen[0], $.extend({}, basis, { titel: titel, fenster: v.fenster, nurTone: v.tone,
-                hinweis: "Pentatonik, pro Saite 2 Töne: Finger 1 und 3" })) });
+                hinweis: "Pentatonik mit Finger 1 und 3 – bei " + (moll ? "b3–4–5" : "1–2–3") + " rutscht Finger 3 hinauf" })) });
     });
     return liste;
 }
