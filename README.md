@@ -25,7 +25,7 @@ Würfeln nicht mehr vor; nach einem Kreuz oder „Lernstand löschen“ sind sie
 Die CAGED-Formen werden in `caged.js` für jeden gewürfelten Akkord berechnet und im richtigen Bund gezeichnet:
 Akkordtöne blau (Grundton mit Ring), zuschaltbar Pentatonik (hellblau) sowie Leitton (rot) und Gleitton (grün);
 Moll wahlweise ab Moll-Grundton (1 b3 5) oder mit Dur-Zahlen (Grundton = 6). Die Einstellungen merkt sich der Browser.
-„Alle Formen“ zeigt alle Formen einer Tonart nach Lage sortiert (Vorauswahl: der gewürfelte Akkord), dazu die verbundenen Fingersätze D–C–A und A–G–E (Moll: Dm–Am, Am–Em), Wechsel mit Finger 1 und 3;
+„Alle Formen“ zeigt alle Formen einer Tonart nach Lage sortiert (Vorauswahl: der gewürfelte Akkord), dazu die verbundenen Fingersätze D–C–A und A–G–E (Moll: Dm–Am, Am–Em): Pentatonik mit 2 Tönen pro Saite (Finger 1 und 3), diagonal durch die Formen;
 jede Form lässt sich kopieren oder als PNG speichern, alle zusammen als A4-PDF.
 Stammton- und Chromatik-Würfel ziehen je 5 Töne. Nach dem Würfeln ist zuerst nichts zu sehen: Mit „Namen zeigen“
 oder „Noten zeigen“ deckt man auf, was man zuerst sehen will (Noten lesen bzw. Töne notieren üben). Notenbild (`noten.js`):

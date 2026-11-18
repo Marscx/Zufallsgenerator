@@ -603,10 +603,14 @@ function $formenDiagramme(grund, moll, o) {
         var titel = name + ": " + form;
         return { titel: titel, datei: form, svg: cagedSvg(grund, form, $.extend({ titel: titel }, basis)) };
     });
+    // Verbundene Fingersätze: pro Saite zwei Töne der Pentatonik, gespielt mit Finger 1 und 3
     CAGED_VERBUNDEN[moll ? "moll" : "dur"].forEach(function (formen) {
+        var v = cagedVerbunden(grund, moll, formen);
+        if (!v) return;
         var titel = cagedVerbundenTitel(grund, moll, formen);
         liste.push({ titel: titel, datei: formen.map(function (n) { return n.replace("-Form", ""); }).join("-") + "-verbunden", verbunden: true,
-            svg: cagedSvg(grund, formen[0], $.extend({ titel: titel, fenster: cagedVerbundenLage(grund, formen), hinweis: "Wechsel mit Finger 1 und 3" }, basis)) });
+            svg: cagedSvg(grund, formen[0], $.extend({}, basis, { titel: titel, fenster: v.fenster, nurTone: v.tone,
+                hinweis: "Pentatonik, pro Saite 2 Töne: Finger 1 und 3" })) });
     });
     return liste;
 }

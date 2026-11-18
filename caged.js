@@ -84,27 +84,65 @@ var CAGED_VERBUNDEN = {
     moll: [["Dm-Form", "Am-Form"], ["Am-Form", "Em-Form"]]
 };
 
-// Bundfenster über mehrere Formen: die erste Form so tief wie möglich (wie cagedLage),
-// jede weitere in der Oktave direkt darüber. Gibt { erster, bis } zurück.
-function cagedVerbundenLage(grundName, formen) {
-    // Zwei Möglichkeiten: wie cagedLage, oder eine Oktave tiefer (Teile unter dem Sattel abgeschnitten,
-    // solange von der ersten Form noch etwas übrig bleibt). Genommen wird die tiefere Lage.
-    function fenster(tiefer) {
-        var vorher = null, von = Infinity, bis = -Infinity, ok = true;
-        formen.forEach(function (n, i) {
-            var f = CAGED_FORMEN[n];
-            var schieb = (tonklasse(grundName) - f.grund + 12) % 12;
-            var v = f.von + schieb, b = f.bis + schieb;
-            if (i === 0) {
-                if (b < 1) { v += 12; b += 12; }
-                if (tiefer) { v -= 12; b -= 12; if (b < 1) ok = false; }
-            } else while (v < vorher) { v += 12; b += 12; }
-            vorher = v;
-            von = Math.min(von, v); bis = Math.max(bis, b);
-        });
-        return ok ? { erster: Math.max(0, von), bis: bis } : null;
+// Bundfenster über mehrere Formen: die erste Form wie cagedLage (bzw. eine Oktave tiefer,
+// Teile unter dem Sattel abgeschnitten), jede weitere in der Oktave direkt darüber.
+// tiefer = true: die tiefere Oktave (null, wenn von der ersten Form nichts übrig bleibt).
+function cagedVerbundenFenster(grundName, formen, tiefer) {
+    var vorher = null, von = Infinity, bis = -Infinity, ok = true;
+    formen.forEach(function (n, i) {
+        var f = CAGED_FORMEN[n];
+        var schieb = (tonklasse(grundName) - f.grund + 12) % 12;
+        var v = f.von + schieb, b = f.bis + schieb;
+        if (i === 0) {
+            if (b < 1) { v += 12; b += 12; }
+            if (tiefer) { v -= 12; b -= 12; if (b < 1) ok = false; }
+        } else while (v < vorher) { v += 12; b += 12; }
+        vorher = v;
+        von = Math.min(von, v); bis = Math.max(bis, b);
+    });
+    return ok ? { erster: Math.max(0, von), bis: bis } : null;
+}
+
+// Fingersatz mit Finger 1 und 3: pro Saite genau zwei Töne der Pentatonik im Ganztonabstand
+// (2 Bünde), von der tiefen E-Saite zur hohen e-Saite diagonal das Griffbrett hinauf –
+// auf jeder Saite das tiefste passende Paar, das nicht tiefer liegt als auf der Saite davor.
+// Gibt { "saite-bund": true, … } zurück oder null, wenn es im Fenster nicht aufgeht.
+function cagedPfad(grundName, moll, fenster) {
+    var grund = tonklasse(grundName);
+    var penta = moll ? [0, 3, 5, 7, 10] : [0, 2, 4, 7, 9];
+    function inPenta(i, bund) { return penta.indexOf((SAITEN[i] + bund - grund + 120) % 12) >= 0; }
+    var tone = {}, vorher = fenster.erster;
+    for (var i = 0; i < 6; i++) {
+        var gefunden = false;
+        for (var b = vorher; b + 2 <= fenster.bis; b++) {
+            if (inPenta(i, b) && inPenta(i, b + 2)) {
+                tone[i + "-" + b] = tone[i + "-" + (b + 2)] = true;
+                vorher = b; gefunden = true; break;
+            }
+        }
+        if (!gefunden) return null;
     }
-    return fenster(true) || fenster(false);
+    return tone;
+}
+
+// Lage und Töne eines verbundenen Fingersatzes: tiefere Oktave, wenn der Fingersatz dort
+// ganz aufgeht, sonst die höhere. Gibt { fenster, tone } zurück.
+function cagedVerbunden(grundName, moll, formen) {
+    var varianten = [cagedVerbundenFenster(grundName, formen, true), cagedVerbundenFenster(grundName, formen, false)];
+    // Geht der Fingersatz knapp nicht auf (v. a. in Moll mit nur zwei Formen), darf das Fenster
+    // oben um bis zu 3 Bünde länger werden.
+    for (var extra = 0; extra <= 3; extra++) {
+        for (var v = 0; v < varianten.length; v++) {
+            if (!varianten[v]) continue;
+            var f = { erster: varianten[v].erster, bis: varianten[v].bis + extra };
+            var tone = cagedPfad(grundName, moll, f);
+            if (tone) return { fenster: f, tone: tone };
+        }
+    }
+    return null;
+}
+function cagedVerbundenLage(grundName, formen) {   // nur noch für Tests/Übersicht der Lagen
+    return cagedVerbundenFenster(grundName, formen, true) || cagedVerbundenFenster(grundName, formen, false);
 }
 
 // Titel wie "C: D-, C- und A-Form verbunden" bzw. "Am: Dm- und Am-Form verbunden"
@@ -126,7 +164,8 @@ function cagedFormenNachLage(grundName, moll) {
 //   grundName  z. B. "F#" (ohne "m")
 //   formName   z. B. "Em-Form"
 //   optionen   { pentatonik: true/false, leitGleit: true/false, mollDurZahlen: true/false, titel: "F#m: Em-Form",
-//                fenster: { erster, bis } (statt der Lage der Form), hinweis: Text unten links }
+//                fenster: { erster, bis } (statt der Lage der Form), hinweis: Text unten links,
+//                nurTone: { "saite-bund": true } – nur diese Töne zeigen (verbundener Fingersatz) }
 //
 // Die Tonleiter wird in Stufen aufgebaut, damit man die Zusammenhänge zeigen kann:
 //   Akkordtöne (immer)  +  Pentatonik (2 Töne, hellblau)  +  Leit- und Gleitton (rot / grün)
@@ -192,8 +231,12 @@ function cagedSvg(grundName, formName, optionen) {
             var istAkkord = akkordStufen.indexOf(abstand) >= 0;
             var istLeit = abstand === lg.leit, istGleit = abstand === lg.gleit;
             var istPenta = !istAkkord && !istLeit && !istGleit;   // die übrigen 2 Töne = Pentatonik
-            if (istPenta && !optionen.pentatonik) continue;
-            if ((istLeit || istGleit) && !optionen.leitGleit) continue;
+            if (optionen.nurTone) {                               // verbundener Fingersatz: nur diese Töne
+                if (!optionen.nurTone[i + "-" + bund]) continue;
+            } else {
+                if (istPenta && !optionen.pentatonik) continue;
+                if ((istLeit || istGleit) && !optionen.leitGleit) continue;
+            }
             var cx = bundX(bund);
             var istGrund = abstand === 0;
             var r = istAkkord ? 10 : 8.5;
