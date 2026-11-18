@@ -76,6 +76,44 @@ function cagedLage(grundName, formName) {
     return { erster: Math.max(0, von), bis: bis };
 }
 
+// Verbundene Fingersätze (nur in der Übersicht "Alle Formen"): benachbarte Formen,
+// die man mit Finger 1 und 3 verbindet. Reihenfolge = aufsteigend auf dem Griffbrett.
+// In Moll gibt es nur Am-, Em- und Dm-Form, darum dort je zwei Formen.
+var CAGED_VERBUNDEN = {
+    dur:  [["D-Form", "C-Form", "A-Form"], ["A-Form", "G-Form", "E-Form"]],
+    moll: [["Dm-Form", "Am-Form"], ["Am-Form", "Em-Form"]]
+};
+
+// Bundfenster über mehrere Formen: die erste Form so tief wie möglich (wie cagedLage),
+// jede weitere in der Oktave direkt darüber. Gibt { erster, bis } zurück.
+function cagedVerbundenLage(grundName, formen) {
+    // Zwei Möglichkeiten: wie cagedLage, oder eine Oktave tiefer (Teile unter dem Sattel abgeschnitten,
+    // solange von der ersten Form noch etwas übrig bleibt). Genommen wird die tiefere Lage.
+    function fenster(tiefer) {
+        var vorher = null, von = Infinity, bis = -Infinity, ok = true;
+        formen.forEach(function (n, i) {
+            var f = CAGED_FORMEN[n];
+            var schieb = (tonklasse(grundName) - f.grund + 12) % 12;
+            var v = f.von + schieb, b = f.bis + schieb;
+            if (i === 0) {
+                if (b < 1) { v += 12; b += 12; }
+                if (tiefer) { v -= 12; b -= 12; if (b < 1) ok = false; }
+            } else while (v < vorher) { v += 12; b += 12; }
+            vorher = v;
+            von = Math.min(von, v); bis = Math.max(bis, b);
+        });
+        return ok ? { erster: Math.max(0, von), bis: bis } : null;
+    }
+    return fenster(true) || fenster(false);
+}
+
+// Titel wie "C: D-, C- und A-Form verbunden" bzw. "Am: Dm- und Am-Form verbunden"
+function cagedVerbundenTitel(grundName, moll, formen) {
+    var k = formen.map(function (n) { return n.replace("-Form", ""); });
+    var liste = k.length > 2 ? k.slice(0, -1).join("-, ") + "- und " + k[k.length - 1] : k[0] + "- und " + k[1];
+    return grundName + (moll ? "m" : "") + ": " + liste + "-Form verbunden";
+}
+
 // Alle Formen eines Akkords, sortiert nach Lage auf dem Griffbrett (von tief nach hoch).
 // Die F-Form fehlt hier, weil sie dieselbe Lage wie die E-Form hat.
 function cagedFormenNachLage(grundName, moll) {
@@ -87,7 +125,8 @@ function cagedFormenNachLage(grundName, moll) {
 // Zeichnet eine Form für einen Akkord.
 //   grundName  z. B. "F#" (ohne "m")
 //   formName   z. B. "Em-Form"
-//   optionen   { pentatonik: true/false, leitGleit: true/false, mollDurZahlen: true/false, titel: "F#m: Em-Form" }
+//   optionen   { pentatonik: true/false, leitGleit: true/false, mollDurZahlen: true/false, titel: "F#m: Em-Form",
+//                fenster: { erster, bis } (statt der Lage der Form), hinweis: Text unten links }
 //
 // Die Tonleiter wird in Stufen aufgebaut, damit man die Zusammenhänge zeigen kann:
 //   Akkordtöne (immer)  +  Pentatonik (2 Töne, hellblau)  +  Leit- und Gleitton (rot / grün)
@@ -102,7 +141,7 @@ function cagedSvg(grundName, formName, optionen) {
     var modus = f.moll ? "aeolisch" : "ionisch";
     var farbeModus = MODUS_FARBE[modus], lg = LEIT_GLEIT[modus];
 
-    var lage = cagedLage(grundName, formName);
+    var lage = optionen.fenster || cagedLage(grundName, formName);   // fenster: für verbundene Formen
     var bis = lage.bis, erster = lage.erster;  // erster gezeigter Bund (0 = leere Saiten)
     var offen = erster === 0;
     var spalten = bis - erster + 1;            // Anzahl gezeigter Bünde (Spalte 0 = leere Saite)
@@ -110,14 +149,15 @@ function cagedSvg(grundName, formName, optionen) {
     // Masse
     var x0 = 34, dx = 44, y0 = 50, dy = 22;
     // Immer 5 Bünde breit zeichnen, damit alle Diagramme gleich gross sind
-    var nBuende = Math.max(offen ? spalten - 1 : spalten, 5);
-    var breite = x0 + nBuende * dx + 18, hoehe = y0 + 5 * dy + 34;
+    var nBuende = Math.max(offen ? spalten - 1 : spalten, optionen.fenster ? 9 : 5);   // verbundene Formen: immer 9 Bünde breit
+    var breite = x0 + nBuende * dx + 18, hoehe = y0 + 5 * dy + 34 + (optionen.hinweis ? 18 : 0);
     var teile = [];
     teile.push('<rect width="' + breite + '" height="' + hoehe + '" fill="' + CAGED_FARBE.papier + '"/>');
     var schrift = 'font-family="Avenir Next, Helvetica Neue, Arial, sans-serif"';
     teile.push('<text x="16" y="30" ' + schrift + ' font-size="20" font-weight="700" fill="' + CAGED_FARBE.linie + '">' +
         (optionen.titel || (grundName + (f.moll ? "m" : "") + ": " + formName)) + '</text>');
-    if (f.hinweis) teile.push('<text x="' + (breite - 16) + '" y="30" text-anchor="end" ' + schrift + ' font-size="12" fill="' + CAGED_FARBE.grau + '">' + f.hinweis + '</text>');
+    var hinweis = optionen.hinweis ? null : f.hinweis;   // optionen.hinweis steht unten (siehe Ende)
+    if (hinweis) teile.push('<text x="' + (breite - 16) + '" y="30" text-anchor="end" ' + schrift + ' font-size="12" fill="' + CAGED_FARBE.grau + '">' + hinweis + '</text>');
 
     // Bundlinien: bei offener Lage ist die erste Linie der Sattel, sonst eine normale Linie
     for (var b = 0; b <= nBuende; b++) {
@@ -165,6 +205,7 @@ function cagedSvg(grundName, formName, optionen) {
             teile.push('<text x="' + cx + '" y="' + (yy + 4) + '" text-anchor="middle" ' + schrift + ' font-size="' + (stufe.length > 1 ? 9.5 : 11) + '" font-weight="700" fill="' + textfarbe + '">' + stufe + '</text>');
         }
     }
+    if (optionen.hinweis) teile.push('<text x="16" y="' + (hoehe - 12) + '" ' + schrift + ' font-size="12" fill="' + CAGED_FARBE.grau + '">' + optionen.hinweis + '</text>');
     return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + breite + ' ' + hoehe + '" width="' + breite + '" height="' + hoehe + '" role="img" aria-label="' +
         (optionen.titel || (grundName + (f.moll ? "m" : "") + " " + formName)) + '">' + teile.join("") + '</svg>';
 }

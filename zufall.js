@@ -595,6 +595,21 @@ function $formenAufGewuerfelt() {
     $("#formenArt").val(c.moll ? "moll" : "dur");
     $formenZeichnen();
 }
+// Alle Diagramme der Übersicht: die einzelnen Formen nach Lage, danach die verbundenen Fingersätze
+function $formenDiagramme(grund, moll, o) {
+    var basis = { pentatonik: o.pentatonik, leitGleit: o.leitGleit, mollDurZahlen: o.mollDurZahlen };
+    var name = grund + (moll ? "m" : "");
+    var liste = cagedFormenNachLage(grund, moll).map(function (form) {
+        var titel = name + ": " + form;
+        return { titel: titel, datei: form, svg: cagedSvg(grund, form, $.extend({ titel: titel }, basis)) };
+    });
+    CAGED_VERBUNDEN[moll ? "moll" : "dur"].forEach(function (formen) {
+        var titel = cagedVerbundenTitel(grund, moll, formen);
+        liste.push({ titel: titel, datei: formen.map(function (n) { return n.replace("-Form", ""); }).join("-") + "-verbunden", verbunden: true,
+            svg: cagedSvg(grund, formen[0], $.extend({ titel: titel, fenster: cagedVerbundenLage(grund, formen), hinweis: "Wechsel mit Finger 1 und 3" }, basis)) });
+    });
+    return liste;
+}
 function $formenZeichnen() {
     if ($("#alleFormen").prop("hidden")) return;
     var grund = $("#formenGrund").val(), moll = $("#formenArt").val() === "moll", o = $cagedOptionen();
@@ -604,11 +619,10 @@ function $formenZeichnen() {
     $("#formenMollZahlenFeld").prop("hidden", !moll);
     $("#alleFormenTitel").text("Alle Formen: " + grund + (moll ? "m" : " Dur"));
     var $raster = $("#alleFormenRaster").empty();
-    cagedFormenNachLage(grund, moll).forEach(function (form) {
-        var titel = grund + (moll ? "m" : "") + ": " + form;
-        var svg = cagedSvg(grund, form, { pentatonik: o.pentatonik, leitGleit: o.leitGleit, mollDurZahlen: o.mollDurZahlen, titel: titel });
-        var datei = "CAGED-" + grund.replace("#", "is") + (moll ? "m" : "") + "-" + form + ".png";
-        var $karte = $('<div class="alle-griff">' + svg + '<div class="alle-fuss">' +
+    $formenDiagramme(grund, moll, o).forEach(function (d) {
+        var titel = d.titel, svg = d.svg;
+        var datei = "CAGED-" + grund.replace("#", "is") + (moll ? "m" : "") + "-" + d.datei + ".png";
+        var $karte = $('<div class="alle-griff' + (d.verbunden ? ' verbunden' : '') + '">' + svg + '<div class="alle-fuss">' +
             '<button type="button" class="btn btn-ghost" data-tun="kopieren">Kopieren</button>' +
             '<button type="button" class="btn btn-ghost" data-tun="png">Als PNG</button></div></div>');
         $karte.find('[data-tun="kopieren"]').attr("aria-label", titel + " in die Zwischenablage kopieren")
@@ -637,15 +651,12 @@ $("#formenGrund, #formenArt").on("change", $formenZeichnen);
 $("#alleFormenPdf").on("click", function () {
     var grund = $("#formenGrund").val(), moll = $("#formenArt").val() === "moll", o = $cagedOptionen();
     var name = grund + (moll ? "m" : "");
-    var formen = cagedFormenNachLage(grund, moll);
     var stufen = ["Akkordtöne blau, Grundton mit Ring"];
     if (o.pentatonik) stufen.push("Pentatonik hellblau");
     if (o.leitGleit) stufen.push("Leitton rot, Gleitton grün");
     pdfHerunterladen(function () {
         return svgPdf({
-            svgs: formen.map(function (form) {
-                return cagedSvg(grund, form, { pentatonik: o.pentatonik, leitGleit: o.leitGleit, mollDurZahlen: o.mollDurZahlen, titel: name + ": " + form });
-            }),
+            svgs: $formenDiagramme(grund, moll, o).map(function (d) { return d.svg; }),   // inkl. verbundene Formen
             breite: 272, hoehe: 194, spalten: 2,
             titel: "CAGED-Formen: " + (moll ? name : grund + " Dur"),
             untertitel: "Sortiert nach Lage, von tief nach hoch – " + stufen.join(" · "),

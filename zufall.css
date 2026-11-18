@@ -158,6 +158,8 @@ body {
 .formen-steuerung .stufen, .formen-steuerung .moll-zahlen { margin: 0; }
 .formen-raster .alle-fuss { justify-content: flex-start; }
 .formen-raster { grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); }
+.formen-raster .verbunden { grid-column: span 2; }   /* verbundene Formen sind breiter */
+@media (max-width: 600px) { .formen-raster .verbunden { grid-column: auto; } }
 #alleFormenButton { margin-left: 6px; }
 
 /* Lernstand: Gewusst ja/nein */
