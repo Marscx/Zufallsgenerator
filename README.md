@@ -17,7 +17,7 @@ Kopfleiste (Navigation zwischen den Übe-Tools), Fusszeile und Markenfarben. Die
 Übe-Tools identisch – Änderungen überall gleich übernehmen.
 
 Die Akkorde der 1. Lage werden in `akkorde.js` als SVG gezeichnet (Griffe als Daten, z. B. C = `x32010`,
-Grundton gelb) und lassen sich als PNG speichern, kopieren oder teilen – etwa für Notiz-Apps.
+Grundton blau mit dickem Ring, Farben wie in den Instrumentengrafiken) und lassen sich als PNG speichern, kopieren oder teilen – etwa für Notiz-Apps.
 „Alle Akkorde“ zeigt die Übersicht und erstellt per Knopf ein A4-PDF (direkt im Browser, ohne Bibliothek).
 Nach dem Würfeln lässt sich angeben, ob man den Griff gewusst hat; der Lernstand (Haken/Kreuz pro Akkord)
 wird nur im Browser gespeichert (localStorage) und erscheint in der Übersicht. Gewusste Akkorde (Haken) kommen beim

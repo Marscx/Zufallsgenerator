@@ -34,10 +34,14 @@ var AKKORDE = {
 // Tonhöhe der leeren Saiten (tief E … hoch e) als Tonklasse
 var LEERE_SAITEN = [4, 9, 2, 7, 11, 4];
 
-// Farben passend zu marcscheidegger.ch
+// Farben wie in den Instrumentengrafiken (caged.marcscheidegger.ch), damit Würfel-Bilder
+// und Instrumentengrafiken auf Arbeitsblättern gleich aussehen:
+// Akkordtöne blau, Grundton blau mit dickem dunklem Ring.
 var FARBE = {
-    linie: "#0b1220",     // Nachtblau: Saiten, Bünde, Punkte, Schrift
-    grund: "#f2b544",     // Gelb: Grundton
+    linie: "#0b1220",     // Nachtblau: Saiten, Bünde, Rand der Punkte, Schrift
+    akk:   "#2f6fde",     // Blau: Akkordton
+    grund: "#2f6fde",     // Blau: Grundton (mit dickem Ring)
+    ring:  3,             // Randdicke Grundton (normale Punkte: 1.4)
     leer:  "#5a6785",     // gedämpft: ×
     papier: "#ffffff"     // Hintergrund (auch beim Export)
 };
@@ -69,7 +73,7 @@ function akkordSvg(name) {
     if (a.barre) {
         var bx = x0 + (a.barre.bund - 0.5) * dx;
         var by1 = y0 + (a.barre.von - 1) * dy, by2 = y0 + (a.barre.bis - 1) * dy;
-        teile.push('<rect x="' + (bx - 8) + '" y="' + (by1 - 8) + '" width="16" height="' + (by2 - by1 + 16) + '" rx="8" fill="' + FARBE.linie + '"/>');
+        teile.push('<rect x="' + (bx - 8) + '" y="' + (by1 - 8) + '" width="16" height="' + (by2 - by1 + 16) + '" rx="8" fill="' + FARBE.akk + '" stroke="' + FARBE.linie + '" stroke-width="1.4"/>');
     }
 
     // Punkte, leere Saiten (○) und nicht gespielte Saiten (×)
@@ -84,10 +88,13 @@ function akkordSvg(name) {
         }
         var bund = parseInt(zeichen, 10);
         var istGrund = (LEERE_SAITEN[i] + bund) % 12 === a.grund;
+        // Leere Saite: kleiner Punkt links vom Sattel, gespielter Ton: Punkt im Bund –
+        // beide blau wie in den Instrumentengrafiken, der Grundton mit dickem Ring
+        var rand = 'stroke="' + FARBE.linie + '" stroke-width="' + (istGrund ? FARBE.ring : 1.4) + '"';
         if (bund === 0) {
-            teile.push('<circle cx="' + (x0 - 22) + '" cy="' + yy + '" r="6.5" fill="' + (istGrund ? FARBE.grund : FARBE.papier) + '" stroke="' + FARBE.linie + '" stroke-width="1.8"/>');
+            teile.push('<circle cx="' + (x0 - 22) + '" cy="' + yy + '" r="6.5" fill="' + (istGrund ? FARBE.grund : FARBE.akk) + '" ' + rand + '/>');
         } else if (!(a.barre && bund === a.barre.bund && (6 - i) >= a.barre.von && (6 - i) <= a.barre.bis) || istGrund) {
-            teile.push('<circle cx="' + (x0 + (bund - 0.5) * dx) + '" cy="' + yy + '" r="8" fill="' + (istGrund ? FARBE.grund : FARBE.linie) + '" stroke="' + FARBE.linie + '" stroke-width="1.8"/>');
+            teile.push('<circle cx="' + (x0 + (bund - 0.5) * dx) + '" cy="' + yy + '" r="8" fill="' + (istGrund ? FARBE.grund : FARBE.akk) + '" ' + rand + '/>');
         }
     }
 
@@ -241,7 +248,7 @@ function akkordePdf(namen, lernstand) {
     var opt = {
         svgs: namen.map(akkordSvg), breite: 214, hoehe: 170, spalten: 4,
         titel: mitStand ? "Akkorde der 1. Lage – Lernstand" : "Akkorde der 1. Lage",
-        untertitel: "Grundton gelb – hohe e-Saite oben, Sattel links"
+        untertitel: "Grundton mit dickem Ring – hohe e-Saite oben, Sattel links"
     };
     if (mitStand) {
         var gewusst = 0, geuebt = 0;
