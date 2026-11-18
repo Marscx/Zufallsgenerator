@@ -49,7 +49,7 @@ function notenSvg(toene, optionen) {
     });
     return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + breite + ' ' + hoehe + '" width="' + breite + '" height="' + hoehe +
         '" role="img" aria-label="Noten: ' + toene.join(" ") + '">' +
-        '<rect width="' + breite + '" height="' + hoehe + '" rx="14" fill="' + NOTEN_FARBE.papier + '"/>' + teile.join("") + '</svg>';
+        '<rect width="' + breite + '" height="' + hoehe + '" fill="' + NOTEN_FARBE.papier + '"/>' + teile.join("") + '</svg>';
 }
 
 // Eine Notenzeile: Notenlinien, Violinschlüssel mit 8, Noten mit Hilfslinien und Vorzeichen

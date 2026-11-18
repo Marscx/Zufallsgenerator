@@ -56,7 +56,7 @@ function akkordSvg(name) {
     var breite = x0 + B * dx + 16, hoehe = y0 + 5 * dy + 22;
     var teile = [];
 
-    teile.push('<rect width="' + breite + '" height="' + hoehe + '" rx="14" fill="' + FARBE.papier + '"/>');
+    teile.push('<rect width="' + breite + '" height="' + hoehe + '" fill="' + FARBE.papier + '"/>');
     teile.push('<text x="16" y="30" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" font-size="22" font-weight="700" fill="' + FARBE.linie + '">' + name + '</text>');
 
     // Saiten (waagrecht) und Bünde (senkrecht), Sattel dick

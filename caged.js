@@ -113,7 +113,7 @@ function cagedSvg(grundName, formName, optionen) {
     var nBuende = Math.max(offen ? spalten - 1 : spalten, 5);
     var breite = x0 + nBuende * dx + 18, hoehe = y0 + 5 * dy + 34;
     var teile = [];
-    teile.push('<rect width="' + breite + '" height="' + hoehe + '" rx="14" fill="' + CAGED_FARBE.papier + '"/>');
+    teile.push('<rect width="' + breite + '" height="' + hoehe + '" fill="' + CAGED_FARBE.papier + '"/>');
     var schrift = 'font-family="Avenir Next, Helvetica Neue, Arial, sans-serif"';
     teile.push('<text x="16" y="30" ' + schrift + ' font-size="20" font-weight="700" fill="' + CAGED_FARBE.linie + '">' +
         (optionen.titel || (grundName + (f.moll ? "m" : "") + ": " + formName)) + '</text>');
