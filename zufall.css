@@ -195,3 +195,16 @@ body {
 
 :focus-visible { outline: 3px solid var(--ms-yellow); outline-offset: 3px; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+/* Übemappe */
+.mappe-hinweis { margin: 4px 0 0; color: var(--muted); font-size: .9rem; max-width: 60ch; }
+.mappe-name { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; font-weight: 600; }
+.mappe-name span { color: var(--muted); font-weight: 400; }
+.mappe-name input {
+    flex: 1 1 200px; max-width: 320px; font: inherit; font-weight: 400; color: var(--ink);
+    background: var(--bg); border: 1px solid var(--line); border-radius: 0; padding: 8px 10px;
+}
+.mappe-name input:focus { outline: none; border-color: var(--c); }
+.mappe-status { color: var(--muted); font-size: .92rem; margin: 12px 0; }
+.mappe label.btn { display: inline-block; cursor: pointer; }
+.mappe-meldung { font-size: .9rem; margin: 10px 0 0; min-height: 1.2em; }

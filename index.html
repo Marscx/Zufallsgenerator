@@ -9,7 +9,7 @@
         <meta name="theme-color" content="#0b1220">
         <link rel="icon" href="favicon.svg" type="image/svg+xml">
         <link rel="stylesheet" href="marke.css?v=7">
-        <link rel="stylesheet" href="zufall.css?v=13">
+        <link rel="stylesheet" href="zufall.css?v=14">
     </head>
     <body>
         <!-- Gemeinsame Kopfleiste aller Übe-Tools (Aussehen in marke.css) -->
@@ -211,6 +211,29 @@
                 </div>
                 <div class="alle-raster" id="alleAkkordeRaster"></div>
             </section>
+
+            <!-- Übemappe: Lernstand als Datei (mappe.js, gleiches Format wie im Übe-Timer) -->
+            <section class="alle-akkorde mappe" id="mappePanel" data-farbe="blau">
+                <div class="alle-kopf">
+                    <div>
+                        <h2>Übemappe</h2>
+                        <p class="mappe-hinweis">Deine Übemappe hält den Lernstand der Akkorde fest – dieselbe Datei wie im Übe-Timer.
+                        Teile sie mit deiner Lehrperson oder öffne sie später wieder, um am selben Ort weiterzumachen.
+                        Gespeichert wird nur auf deinem Gerät, nicht im Internet.</p>
+                    </div>
+                </div>
+                <label class="mappe-name">Name <span>(freiwillig)</span>
+                    <input id="mappeName" type="text" maxlength="40" placeholder="z. B. Vorname" autocomplete="off">
+                </label>
+                <p id="mappeStatus" class="mappe-status"></p>
+                <div class="alle-aktionen">
+                    <button id="mappeTeilenBtn" class="btn" type="button">↗ Mappe teilen</button>
+                    <label class="btn btn-ghost" for="mappeDatei">📂 Mappe öffnen</label>
+                    <input id="mappeDatei" type="file" accept=".json,application/json" hidden>
+                    <button id="mappeNeuBtn" class="btn btn-ghost" type="button">Neue Mappe</button>
+                </div>
+                <p id="mappeMeldung" class="mappe-meldung" role="status"></p>
+            </section>
         </main>
 
         <!-- Gemeinsame Fusszeile aller Übe-Tools (Aussehen in marke.css) -->
@@ -228,6 +251,7 @@
         <script src="akkorde.js?v=10"></script>
         <script src="caged.js?v=10"></script>
         <script src="noten.js?v=2"></script>
-        <script src="zufall.js?v=20"></script>
+        <script src="mappe.js?v=1"></script>
+        <script src="zufall.js?v=21"></script>
     </body>
 </html>

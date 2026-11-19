@@ -544,6 +544,7 @@ function $cagedOptionen() {
 }
 function $cagedOptionenSpeichern(o) {
     try { localStorage.setItem(CAGED_KEY, JSON.stringify(o)); } catch (e) {}
+    if (typeof $mappe !== "undefined") { $wuerfelTeil().caged = o; Mappe.merken($mappe); }
 }
 function $cagedSvg() {
     var c = $("#imgCaged").data("caged");
@@ -721,6 +722,8 @@ function $lernstandLesen() {
 }
 function $lernstandSchreiben(daten) {
     try { localStorage.setItem(LERNSTAND_KEY, JSON.stringify(daten)); } catch (e) { /* privater Modus: nicht speichern */ }
+    $wuerfelTeil().lernstand = daten;
+    Mappe.merken($mappe);
 }
 function $lernstandEintragen(name, gewusst) {
     var daten = $lernstandLesen();
@@ -728,9 +731,81 @@ function $lernstandEintragen(name, gewusst) {
     e[gewusst ? "ja" : "nein"]++;
     e.zuletzt = gewusst ? "ja" : "nein";
     daten[name] = e;
+    // Verlauf mit Zeitstempel (für die Lektion nachvollziehbar), höchstens 1000 Einträge
+    var verlauf = $wuerfelTeil().verlauf;
+    verlauf.push({ zeit: new Date().toISOString(), akkord: name, gewusst: gewusst });
+    if (verlauf.length > 1000) verlauf.splice(0, verlauf.length - 1000);
     $lernstandSchreiben(daten);
     $lernstandAnzeigen();
+    $mappeAnzeigen();
 }
+
+// ---------- Übemappe (Datei-Format: mappe.js, MAPPE.md im Übe-Timer) ----------
+// Der Teil "wuerfel" enthält den Lernstand der Akkorde, den Verlauf der Antworten und die
+// CAGED-Einstellungen. Wer eine Mappe öffnet, arbeitet mit deren Lernstand weiter
+// (z. B. mehrere Schüler/innen am selben iPad: jede/r öffnet die eigene Mappe).
+var $mappe = Mappe.laden();
+function $wuerfelTeil() {
+    var t = Mappe.teil($mappe, "wuerfel", function () { return { version: 1, lernstand: {}, verlauf: [], caged: {} }; });
+    if (!t.lernstand || typeof t.lernstand !== "object") t.lernstand = {};
+    if (!Array.isArray(t.verlauf)) t.verlauf = [];
+    if (!t.caged || typeof t.caged !== "object") t.caged = {};
+    return t;
+}
+var $teilenMoeglich = Mappe.kannTeilen();
+var $fmtTag = function (d) { return new Date(d).toLocaleDateString("de-CH", { weekday: "short", day: "numeric", month: "short", year: "numeric" }); };
+
+function $mappeAnzeigen() {
+    var t = $wuerfelTeil(), namen = Object.keys(AKKORDE), gewusst = 0, geuebt = 0;
+    namen.forEach(function (n) { var e = t.lernstand[n]; if (e) { geuebt++; if (e.zuletzt === "ja") gewusst++; } });
+    var letzte = t.verlauf[t.verlauf.length - 1];
+    $("#mappeName").val($mappe.name || "");
+    $("#mappeStatus").text(geuebt
+        ? "Akkorde 1. Lage: " + gewusst + " von " + namen.length + " zuletzt gewusst · " + geuebt + " geübt" +
+          (letzte ? " · zuletzt geübt am " + $fmtTag(letzte.zeit) : "")
+        : "Noch nichts geübt – beim Akkord-Würfel mit «Gewusst» / «Nicht gewusst» antworten, dann kommt es in die Mappe.");
+}
+// Lernstand und Einstellungen aus der Mappe in den Browser übernehmen (nach dem Öffnen)
+function $mappeUebernehmen() {
+    var t = $wuerfelTeil();
+    try { localStorage.setItem(LERNSTAND_KEY, JSON.stringify(t.lernstand)); } catch (e) {}
+    try { localStorage.setItem(CAGED_KEY, JSON.stringify(t.caged)); } catch (e) {}
+    $letzterAkkord = null;
+    $lernstandAnzeigen();
+    if ($("#imgCaged").data("caged")) $("#imgCaged .griff-svg").html($cagedSvg());
+    $formenZeichnen();
+    $mappeAnzeigen();
+}
+$("#mappeTeilenBtn").text($teilenMoeglich ? "↗ Mappe teilen" : "⬇ Mappe speichern").on("click", function () {
+    var knopf = this;
+    if ($teilenMoeglich) { Mappe.teilen($mappe); return; }
+    Mappe.herunterladen($mappe);
+    var alt = knopf.textContent;
+    knopf.textContent = "Gespeichert ✓";
+    setTimeout(function () { knopf.textContent = alt; }, 1800);
+});
+$("#mappeName").on("input", function () { $mappe.name = this.value.trim(); Mappe.merken($mappe); });
+$("#mappeDatei").on("change", function () {
+    var datei = this.files[0];
+    this.value = "";
+    if (!datei) return;
+    Mappe.oeffnen(datei).then(function (m) {
+        var bisher = Object.keys($wuerfelTeil().lernstand).length;
+        if (bisher && !confirm("Die geöffnete Mappe ersetzt die aktuelle mit ihrem Lernstand. Weiter?")) return;
+        $mappe = m;
+        Mappe.merken($mappe);
+        $mappeUebernehmen();
+        $("#mappeMeldung").text("Mappe" + ($mappe.name ? " von " + $mappe.name : "") + " geöffnet.");
+    }).catch(function (err) { $("#mappeMeldung").text(err.message); });
+});
+$("#mappeNeuBtn").on("click", function () {
+    var bisher = Object.keys($wuerfelTeil().lernstand).length;
+    if (bisher && !confirm("Neue, leere Mappe beginnen? Der Lernstand der aktuellen Mappe wird aus diesem Browser entfernt – speichere oder teile sie vorher, wenn du sie behalten willst.")) return;
+    $mappe = Mappe.neu();
+    Mappe.merken($mappe);
+    $mappeUebernehmen();
+    $("#mappeMeldung").text("Neue Mappe begonnen.");
+});
 // Haken/Kreuz in der Übersicht und Zusammenfassung oben aktualisieren
 function $lernstandAnzeigen() {
     var daten = $lernstandLesen(), namen = Object.keys(AKKORDE), gewusst = 0, geuebt = 0;
@@ -755,8 +830,9 @@ $("#gewusstJa, #gewusstNein").on("click", function () {
 });
 $("#lernstandReset").on("click", function () {
     if (!confirm("Lernstand aller Akkorde löschen?")) return;
-    try { localStorage.removeItem(LERNSTAND_KEY); } catch (e) {}
+    $lernstandSchreiben({});
     $lernstandAnzeigen();
+    $mappeAnzeigen();
 });
 
 // Übersicht aller Akkorde der 1. Lage ein-/ausblenden; Diagramme werden beim ersten Öffnen gezeichnet
@@ -790,3 +866,15 @@ $("#alleAkkordePdf").on("click", function () { akkordePdfHerunterladen(this, $le
 
 // Beim Laden anzeigen, wie viele Akkorde noch im Würfel sind
 $akkRestAnzeigen();
+// Bisherigen Lernstand im Browser in die Mappe übernehmen (auch von vor der Übemappe)
+(function () {
+    var t = $wuerfelTeil();
+    var lokal = $lernstandLesen();
+    if (Object.keys(lokal).length) t.lernstand = lokal;
+    else if (Object.keys(t.lernstand).length) $lernstandSchreiben(t.lernstand);
+    var o = {};
+    try { o = JSON.parse(localStorage.getItem(CAGED_KEY)) || {}; } catch (e) {}
+    t.caged = o;
+    Mappe.merken($mappe);
+    $mappeAnzeigen();
+})();
