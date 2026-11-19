@@ -778,11 +778,15 @@ function $mappeUebernehmen() {
 }
 $("#mappeTeilenBtn").text($teilenMoeglich ? "↗ Mappe teilen" : "⬇ Mappe speichern").on("click", function () {
     var knopf = this;
-    if ($teilenMoeglich) { Mappe.teilen($mappe); return; }
+    function gespeichert() {
+        var alt = knopf.textContent;
+        knopf.textContent = "Gespeichert ✓";
+        setTimeout(function () { knopf.textContent = alt; }, 1800);
+    }
+    // Kann der Browser die Datei doch nicht teilen, wird sie heruntergeladen
+    if ($teilenMoeglich) { Mappe.teilen($mappe).then(function (r) { if (r === "heruntergeladen") gespeichert(); }); return; }
     Mappe.herunterladen($mappe);
-    var alt = knopf.textContent;
-    knopf.textContent = "Gespeichert ✓";
-    setTimeout(function () { knopf.textContent = alt; }, 1800);
+    gespeichert();
 });
 $("#mappeName").on("input", function () { $mappe.name = this.value.trim(); Mappe.merken($mappe); });
 $("#mappeDatei").on("change", function () {
